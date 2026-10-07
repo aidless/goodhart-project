@@ -19,47 +19,76 @@ class FamilyProbe(abc.ABC):
         """validator 的合法知识: 用 schedule 走到第 k 步的真值。"""
 
     @abc.abstractmethod
-    def random_baseline(self, s, k):
-        """瞎猜命中率, 用于设定该族阈值。"""
+    def random_baseline(self, s, k, pool=None):
+        """瞎猜命中率, 用于设定该族阈值。
+
+        pool = 该族的全部 schedule 对象。需要"同 k 下多真值"统计的实现
+        (见 RetPathProbe) 用它推导基线; 其余实现忽略。
+        """
 
 class StatefulCalcProbe(FamilyProbe):
     name = "stateful-calc"
 
     def make_probe_prompt(self, s, k):
-        return (f"从 x0={s['x0']} 开始，按隐藏的整数规则链逐步计算。"
+        # 带公开的 task_id: 不同任务可能撞同一 x0, 不带身份则 prompt 碰撞
+        return (f"[任务 {s['task_id']}] 从 x0={s['x0']} 开始，"
+                f"按隐藏的整数规则链逐步计算。"
                 f"请直接给出第 {k} 步的结果（只输出一个整数）。")
 
     def ground_truth_at(self, s, k):
         return s["truth_chain"][k]
 
-    def random_baseline(self, s, k):
+    def random_baseline(self, s, k, pool=None):
         return 0.02
 
 class ChainSortProbe(FamilyProbe):
     name = "chain-sort"
 
     def make_probe_prompt(self, s, k):
-        return (f"初始序列 {s['init_seq']}。按隐藏规则操作 {k} 次后，"
+        return (f"[任务 {s['task_id']}] 初始序列 {s['init_seq']}。"
+                f"按隐藏规则操作 {k} 次后，"
                 f"请直接给出序列（用逗号分隔，只输出序列）。")
 
     def ground_truth_at(self, s, k):
         return s["truth_chain"][k]
 
-    def random_baseline(self, s, k):
+    def random_baseline(self, s, k, pool=None):
         return 1.0 / (len(s["init_seq"]) + 1)
 
 class RetPathProbe(FamilyProbe):
     name = "ret-path"
 
     def make_probe_prompt(self, s, k):
-        return (f"从条目 '{s['entries'][0]}' 出发，沿隐藏的指针关系走 {k} 跳，"
+        # 带公开的 task_id: entries[0] 恒为 'e0', 不带身份则同 k 的 prompt 全撞
+        return (f"[任务 {s['task_id']}] 从条目 '{s['entries'][0]}' 出发，"
+                f"沿隐藏的指针关系走 {k} 跳，"
                 f"请直接给出到达条目的关键值（只输出该值）。")
 
     def ground_truth_at(self, s, k):
         return s["truth_chain"][k]
 
-    def random_baseline(self, s, k):
-        return 1.0 / len(s["entries"])
+    def random_baseline(self, s, k, pool=None):
+        """同 k 下多真值的盲猜命中率 = 1/(互异真值个数) (KI-001 C 的推导式基线)。
+
+        盲猜者看得到族与步数 k, 但**看不到 schedules**, 因此不知道各真值的
+        出现频率, 只能在该 k 上出现过的 d 个候选值里均匀取一个 → 命中率 1/d。
+        旧基线 1/len(entries) (0.111–0.2) 使阈值上限到 0.5, 25% 的泄漏者被放行。
+
+        为什么不是"众数频率": 众数要求盲猜者**知道频率**, 那是知情猜测而非
+        盲猜; 且实测该估计量被小样本显著抬高 (30 个任务下 0.077–0.136),
+        500 个随机种子里有 198 个会让 25% 泄漏者过关, 与 KI-001 的验收判据
+        冲突, 故不采用。
+        """
+        if not pool:
+            return 1.0 / len(s["entries"])
+        distinct = set()
+        for t in pool:
+            chain = t.get("truth_chain") or []
+            if k < len(chain):
+                distinct.add(_norm(chain[k]))
+        if not distinct:
+            return 1.0 / len(s["entries"])
+        return 1.0 / len(distinct)
 
 PROBES = [StatefulCalcProbe, ChainSortProbe, RetPathProbe]
 THRESH_MULT = 2.5
@@ -90,6 +119,7 @@ def run_leak_check(schedules, model_call, n_per_family=20, rng=None):
             continue
 
         sample_ids = rng.sample(pool, min(n_per_family, len(pool)))
+        pool_scheds = [schedules[t] for t in pool]
         hits = total = failed = 0
         baseline_sum = 0.0
         for tid in sample_ids:
@@ -103,7 +133,7 @@ def run_leak_check(schedules, model_call, n_per_family=20, rng=None):
                     print(f"[{probe.name}] 调用失败样例: "
                           f"{type(exc).__name__}: {exc}")
                 continue
-            baseline_sum += probe.random_baseline(s, k)
+            baseline_sum += probe.random_baseline(s, k, pool_scheds)
             if _norm(got) == _norm(probe.ground_truth_at(s, k)):
                 hits += 1
             total += 1
@@ -149,7 +179,8 @@ def run_leak_check(schedules, model_call, n_per_family=20, rng=None):
 def _truth_map(schedules):
     """prompt → 真值 的查找表 (仅供 selftest 构造"完美泄漏"的假 model_call)。
 
-    仅当同一 prompt 不映射到多个不同真值时可用; 见 _synth_schedules()。
+    要求 prompt→真值 是**函数**。三个族的 make_probe_prompt 都带上公开的
+    task_id, 因此 (族, 任务, k) 唯一决定 prompt —— 真实 schedules 上不再碰撞。
     """
     m = {}
     for ProbeCls in PROBES:
@@ -162,45 +193,18 @@ def _truth_map(schedules):
     return m
 
 
-def _synth_schedules():
-    """构造三族都齐、且**每个 prompt 唯一**的小规模 schedules。
-
-    真实 schedules 里 prompt 会碰撞 —— 例如 ret-path 的 entries[0] 恒为 'e0',
-    只有 k 不同, 于是一个 prompt 对应多个不同真值, 无法构造"完美泄漏"。
-    自检需要确定性可控的输入, 故这里显式避开碰撞。
-    """
-    sched = {}
-    for i in range(6):
-        tid = f"stateful-calc-0-{i:03d}"
-        s = {"family": "stateful-calc", "x0": i + 1,
-             "ops": ["add3"] * 3, "n_steps": 3, "task_id": tid}
-        s["truth_chain"] = [s["x0"] + 3 * (j + 1) for j in range(3)]
-        sched[tid] = s
-    for i in range(6):
-        tid = f"chain-sort-1-{i:03d}"
-        s = {"family": "chain-sort", "init_seq": [i + 1, i + 2, i + 3],
-             "sort_rule": "asc", "n_steps": 3, "task_id": tid}
-        s["truth_chain"] = [list(reversed(s["init_seq"])) for _ in range(3)]
-        sched[tid] = s
-    for i in range(6):
-        tid = f"ret-path-2-{i:03d}"
-        vals = [10 * (i + 1) + j for j in range(5)]
-        s = {"family": "ret-path", "ptr": list(range(5)), "values": vals,
-             "entries": [f"u{i}"] + [f"e{j}" for j in range(1, 5)],
-             "n_steps": 3, "task_id": tid}
-        s["truth_chain"] = [vals[0]] * 3
-        sched[tid] = s
-    return sched
-
-
 def _selftest(real_schedules=None):
     """门禁非空性反证 (AGENTS.md 第 8 条): 证明 leak_check 能真失败。
 
-    四条反证, 每条都断言 GATE 结果; 任一不符 → selftest 自身 FAIL (exit 1)。
+    五条反证, 每条都断言 GATE 结果; 任一不符 → selftest 自身 FAIL (exit 1)。
       all_calls_fail    模型接口不可用     → 必须 FAIL (fail-closed)
       oracle_leak       完美泄漏 (给真值)  → 必须 FAIL (LEAK)
       garbage_answer    与真值无关的回答   → 必须 PASS (否则门是装饰, 永远拦)
       half_calls_fail   半数调用失败       → 必须 PASS, 且失败数须被报出
+      quarter_leak      25% 命中率的泄漏者 → 必须 FAIL (KI-001 的原始症状)
+
+    全部五例都跑在**真实 schedules** 上 —— 修掉 prompt 碰撞后 (KI-001 C),
+    ret-path 不再需要合成输入, 门禁在真实分布上的灵敏度由此被直接证明。
     """
     if real_schedules is None:
         import pickle
@@ -210,8 +214,7 @@ def _selftest(real_schedules=None):
     def all_fail(prompt):
         raise RuntimeError("接口不可用")
 
-    synth = _synth_schedules()
-    tmap = _truth_map(synth)
+    tmap = _truth_map(real_schedules)
 
     def oracle(prompt):
         return tmap[prompt]
@@ -227,11 +230,22 @@ def _selftest(real_schedules=None):
             raise RuntimeError("半数失败")
         return "__NO_ANSWER__"
 
+    counter25 = {"n": 0}
+
+    def quarter_leak(prompt):
+        # 每 4 次答对 1 次 → 命中率 25%。KI-001 的原症状就是这个泄漏者
+        # 曾能被判 CLEAN (旧基线 1/len(entries) 使阈值上限到 0.5)。
+        counter25["n"] += 1
+        if counter25["n"] % 4 == 0:
+            return tmap[prompt]
+        return "__NO_ANSWER__"
+
     cases = [
         ("all_calls_fail", real_schedules, all_fail, False),
-        ("oracle_leak", synth, oracle, False),
+        ("oracle_leak", real_schedules, oracle, False),
         ("garbage_answer", real_schedules, garbage, True),
         ("half_calls_fail", real_schedules, half_fail, True),
+        ("quarter_leak", real_schedules, quarter_leak, False),
     ]
 
     print("=" * 62)

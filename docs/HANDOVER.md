@@ -323,17 +323,44 @@ mean_speed`。**即使装好 sb3 跑通训练，`analyze_c2.py` 也会直接因�
 预注册正文新增 §0「锁定说明」，把三条跑后不许改的口径（speed 定义、
 训练奖励≠报告量的偏离、`steps_alive` 饱和的预期性）写在锁定之前。
 
-### 13.4 引用台账比 §5 描述的更空
+### 13.4 引用台账：已核实 13 条、留空 4 条（原"17 个待填写的引用空位"，2026-10-07 已推进）
 
-§5 说"17 行…全部元数据默认 ⚠️ —— 它们产生于助手记忆，未经任何检索确认"。
-实况更彻底：`prereg/citation_verification.csv` 的 17 行**没有任何元数据**，
+原文（本节初稿）记录：`prereg/citation_verification.csv` 的 17 行
 `cite_key/title/authors/year/venue/doi/zotero_key` **每一格都是 `[待填]`**，
-只有 `notes` 列写着"这里应该引什么"（如"PPO 原始文献""预注册方法论"）。
+只有 `notes` 列写着"这里应该引什么"。即"17 个待填写的引用空位"。
 
-也就是说：**这不是"17 条待核验的引用"，而是"17 个待填写的引用空位"。**
-§5 的"核验流程"（逐条确 DOI/标题/作者）在当前状态下无从执行——没有可核之物。
-真正的下一步是"检索并填入"，其后才是核验。方法论见
-`docs/citation_verification_spec.md`（该文件在 §1 的目录树里没有列出）。
+**已推进**（本轮）：新增 `verified_via` 列（`docs/citation_verification_spec.md`
+原本就要求此列），逐条联网检索后**填实 13 条**，`zotero_key` 全部保持 `[待填]`
+（无 Zotero 访问权，无法核验）。
+
+**4 行刻意留空**（留空是合格交付，编造不是）：
+- 第 1 行「Goodhart 原始表述」：能核到的可引版本是 Palgrave 1984 重印本
+  （DOI 10.1007/978-1-349-17295-5_4），但该行注记明确要求"定位到具体页码"，
+  而页码未能核到、年份（1984）与原始年份（1975）也不一致 → 留空待人工处理。
+- 第 2–4 行「三裂缝（测量/代理/不可证伪）的出处」：**这是本项目自身的框架**
+  （见本文件 §2），外部未有对应三分法文献。最接近的 Manheim & Garrabrant 2018
+  《Categorizing Variants of Goodhart's Law》(arXiv:1803.04585) 是**四类**
+  （regressional / extremal / causal / adversarial），与"三裂缝"不符 → 留空。
+  **这三条可能是"自创框架被当成有出处"的风险点，值得复核。**
+
+**独立复核（不信标记，直接查权威源）**：用 arXiv API（`export.arxiv.org/api/query`）
+与 Crossref API（`api.crossref.org/works/{doi}`）对 13 条逐条回拉权威元数据并比对
+标题/年份。**复核脚本是一次性脚本，未入库**（若日后要常态化复核，应放进 `tools/`
+并纳入测试）。结果：
+- **13 条标题全部逐字一致**；DOI 10.1109/TSMC.1983.6313077 与
+  10.1073/pnas.1708274114 经 Crossref 确认。
+- 2 条 JMLR 文献（`raffin2021stable`、`pineau2021improving`）无 DOI，Crossref
+  取不到，改为直接抓 jmlr.org 页面确认标题/作者/卷期页
+  （`22(268):1−8`、`22(164):1−20`，均 2021）。
+- **发现 3 处"年份双写"陷阱**：`ross2011reduction`（CSV 2011 = AISTATS 刊出年，
+  arXiv 预印本 2010）、`sainz2024nlp`（2024 vs 2023）、`morris2024levels`
+  （2024 vs 2023）。`year` 列按引用惯例取**刊出年**，预印本年已写进 `venue` 列，
+  以免日后被当成错误引用。
+
+**仍受的红线约束**：§5 的"核验完成前不得进入正式写作参考文献"仍然有效 ——
+`zotero_key` 未核、Goodhart 页码未定、三裂缝无出处，这三项未结。
+`docs/citation_verification_spec.md` 规定的完整流程尚未跑完（`tools/reconcile_zotero.py`
+未执行）。
 
 ### 13.5 目录树（§1）漏列 / 错位
 

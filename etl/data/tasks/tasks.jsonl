@@ -1,0 +1,90 @@
+{"family": "stateful-calc", "x0": 7, "n_steps": 10, "task_id": "stateful-calc-0-000"}
+{"family": "stateful-calc", "x0": 4, "n_steps": 8, "task_id": "stateful-calc-0-001"}
+{"family": "stateful-calc", "x0": 3, "n_steps": 6, "task_id": "stateful-calc-0-002"}
+{"family": "stateful-calc", "x0": 9, "n_steps": 4, "task_id": "stateful-calc-0-003"}
+{"family": "stateful-calc", "x0": 4, "n_steps": 8, "task_id": "stateful-calc-0-004"}
+{"family": "stateful-calc", "x0": 7, "n_steps": 9, "task_id": "stateful-calc-0-005"}
+{"family": "stateful-calc", "x0": 2, "n_steps": 5, "task_id": "stateful-calc-0-006"}
+{"family": "stateful-calc", "x0": 8, "n_steps": 4, "task_id": "stateful-calc-0-007"}
+{"family": "stateful-calc", "x0": 2, "n_steps": 6, "task_id": "stateful-calc-0-008"}
+{"family": "stateful-calc", "x0": 9, "n_steps": 5, "task_id": "stateful-calc-0-009"}
+{"family": "stateful-calc", "x0": 2, "n_steps": 8, "task_id": "stateful-calc-0-010"}
+{"family": "stateful-calc", "x0": 1, "n_steps": 8, "task_id": "stateful-calc-0-011"}
+{"family": "stateful-calc", "x0": 1, "n_steps": 10, "task_id": "stateful-calc-0-012"}
+{"family": "stateful-calc", "x0": 4, "n_steps": 9, "task_id": "stateful-calc-0-013"}
+{"family": "stateful-calc", "x0": 6, "n_steps": 4, "task_id": "stateful-calc-0-014"}
+{"family": "stateful-calc", "x0": 6, "n_steps": 10, "task_id": "stateful-calc-0-015"}
+{"family": "stateful-calc", "x0": 6, "n_steps": 7, "task_id": "stateful-calc-0-016"}
+{"family": "stateful-calc", "x0": 9, "n_steps": 8, "task_id": "stateful-calc-0-017"}
+{"family": "stateful-calc", "x0": 2, "n_steps": 7, "task_id": "stateful-calc-0-018"}
+{"family": "stateful-calc", "x0": 3, "n_steps": 9, "task_id": "stateful-calc-0-019"}
+{"family": "stateful-calc", "x0": 2, "n_steps": 10, "task_id": "stateful-calc-0-020"}
+{"family": "stateful-calc", "x0": 9, "n_steps": 7, "task_id": "stateful-calc-0-021"}
+{"family": "stateful-calc", "x0": 6, "n_steps": 9, "task_id": "stateful-calc-0-022"}
+{"family": "stateful-calc", "x0": 3, "n_steps": 6, "task_id": "stateful-calc-0-023"}
+{"family": "stateful-calc", "x0": 3, "n_steps": 4, "task_id": "stateful-calc-0-024"}
+{"family": "stateful-calc", "x0": 9, "n_steps": 6, "task_id": "stateful-calc-0-025"}
+{"family": "stateful-calc", "x0": 9, "n_steps": 9, "task_id": "stateful-calc-0-026"}
+{"family": "stateful-calc", "x0": 3, "n_steps": 5, "task_id": "stateful-calc-0-027"}
+{"family": "stateful-calc", "x0": 6, "n_steps": 8, "task_id": "stateful-calc-0-028"}
+{"family": "stateful-calc", "x0": 2, "n_steps": 4, "task_id": "stateful-calc-0-029"}
+{"family": "chain-sort", "init_seq": [8, 8, 15, 13], "sort_rule": "desc", "n_steps": 9, "task_id": "chain-sort-1-000"}
+{"family": "chain-sort", "init_seq": [13, 19, 14], "sort_rule": "asc", "n_steps": 9, "task_id": "chain-sort-1-001"}
+{"family": "chain-sort", "init_seq": [15, 3, 9, 6], "sort_rule": "desc", "n_steps": 7, "task_id": "chain-sort-1-002"}
+{"family": "chain-sort", "init_seq": [2, 16, 11], "sort_rule": "desc", "n_steps": 6, "task_id": "chain-sort-1-003"}
+{"family": "chain-sort", "init_seq": [14, 7, 18], "sort_rule": "asc", "n_steps": 9, "task_id": "chain-sort-1-004"}
+{"family": "chain-sort", "init_seq": [1, 13, 14, 11], "sort_rule": "asc", "n_steps": 4, "task_id": "chain-sort-1-005"}
+{"family": "chain-sort", "init_seq": [1, 17, 20], "sort_rule": "asc", "n_steps": 4, "task_id": "chain-sort-1-006"}
+{"family": "chain-sort", "init_seq": [20, 7, 10], "sort_rule": "asc", "n_steps": 6, "task_id": "chain-sort-1-007"}
+{"family": "chain-sort", "init_seq": [16, 13, 3], "sort_rule": "desc", "n_steps": 4, "task_id": "chain-sort-1-008"}
+{"family": "chain-sort", "init_seq": [4, 9, 5, 17, 12, 4], "sort_rule": "desc", "n_steps": 5, "task_id": "chain-sort-1-009"}
+{"family": "chain-sort", "init_seq": [2, 2, 7], "sort_rule": "desc", "n_steps": 9, "task_id": "chain-sort-1-010"}
+{"family": "chain-sort", "init_seq": [12, 19, 2, 20, 16], "sort_rule": "desc", "n_steps": 9, "task_id": "chain-sort-1-011"}
+{"family": "chain-sort", "init_seq": [12, 18, 6, 7, 13, 19], "sort_rule": "asc", "n_steps": 6, "task_id": "chain-sort-1-012"}
+{"family": "chain-sort", "init_seq": [5, 9, 11, 11], "sort_rule": "asc", "n_steps": 6, "task_id": "chain-sort-1-013"}
+{"family": "chain-sort", "init_seq": [20, 2, 2, 9, 6], "sort_rule": "desc", "n_steps": 5, "task_id": "chain-sort-1-014"}
+{"family": "chain-sort", "init_seq": [13, 18, 5, 10, 4], "sort_rule": "asc", "n_steps": 7, "task_id": "chain-sort-1-015"}
+{"family": "chain-sort", "init_seq": [10, 6, 17], "sort_rule": "asc", "n_steps": 9, "task_id": "chain-sort-1-016"}
+{"family": "chain-sort", "init_seq": [13, 11, 10, 14, 4], "sort_rule": "desc", "n_steps": 4, "task_id": "chain-sort-1-017"}
+{"family": "chain-sort", "init_seq": [11, 11, 4, 16, 4, 16], "sort_rule": "asc", "n_steps": 7, "task_id": "chain-sort-1-018"}
+{"family": "chain-sort", "init_seq": [11, 5, 6, 19, 13], "sort_rule": "asc", "n_steps": 9, "task_id": "chain-sort-1-019"}
+{"family": "chain-sort", "init_seq": [3, 7, 8], "sort_rule": "desc", "n_steps": 4, "task_id": "chain-sort-1-020"}
+{"family": "chain-sort", "init_seq": [4, 13, 18], "sort_rule": "desc", "n_steps": 8, "task_id": "chain-sort-1-021"}
+{"family": "chain-sort", "init_seq": [16, 19, 7, 14, 3, 12], "sort_rule": "desc", "n_steps": 5, "task_id": "chain-sort-1-022"}
+{"family": "chain-sort", "init_seq": [14, 7, 12, 4], "sort_rule": "asc", "n_steps": 4, "task_id": "chain-sort-1-023"}
+{"family": "chain-sort", "init_seq": [7, 4, 16, 13, 9, 7], "sort_rule": "asc", "n_steps": 9, "task_id": "chain-sort-1-024"}
+{"family": "chain-sort", "init_seq": [20, 5, 4, 7], "sort_rule": "desc", "n_steps": 7, "task_id": "chain-sort-1-025"}
+{"family": "chain-sort", "init_seq": [18, 5, 4, 20, 16], "sort_rule": "desc", "n_steps": 5, "task_id": "chain-sort-1-026"}
+{"family": "chain-sort", "init_seq": [17, 16, 11, 16, 16, 7], "sort_rule": "asc", "n_steps": 8, "task_id": "chain-sort-1-027"}
+{"family": "chain-sort", "init_seq": [11, 11, 11], "sort_rule": "asc", "n_steps": 4, "task_id": "chain-sort-1-028"}
+{"family": "chain-sort", "init_seq": [20, 5, 13, 19, 10], "sort_rule": "desc", "n_steps": 9, "task_id": "chain-sort-1-029"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4"], "n_steps": 6, "task_id": "ret-path-2-000"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5"], "n_steps": 8, "task_id": "ret-path-2-001"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8"], "n_steps": 8, "task_id": "ret-path-2-002"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5", "e6"], "n_steps": 6, "task_id": "ret-path-2-003"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5", "e6"], "n_steps": 4, "task_id": "ret-path-2-004"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8"], "n_steps": 9, "task_id": "ret-path-2-005"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5", "e6"], "n_steps": 6, "task_id": "ret-path-2-006"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5"], "n_steps": 6, "task_id": "ret-path-2-007"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4"], "n_steps": 5, "task_id": "ret-path-2-008"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5"], "n_steps": 4, "task_id": "ret-path-2-009"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7"], "n_steps": 4, "task_id": "ret-path-2-010"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4"], "n_steps": 8, "task_id": "ret-path-2-011"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5"], "n_steps": 5, "task_id": "ret-path-2-012"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5"], "n_steps": 7, "task_id": "ret-path-2-013"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5", "e6"], "n_steps": 5, "task_id": "ret-path-2-014"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5"], "n_steps": 8, "task_id": "ret-path-2-015"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4"], "n_steps": 9, "task_id": "ret-path-2-016"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5"], "n_steps": 8, "task_id": "ret-path-2-017"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4"], "n_steps": 7, "task_id": "ret-path-2-018"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4"], "n_steps": 7, "task_id": "ret-path-2-019"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7"], "n_steps": 7, "task_id": "ret-path-2-020"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5"], "n_steps": 8, "task_id": "ret-path-2-021"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8"], "n_steps": 7, "task_id": "ret-path-2-022"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8"], "n_steps": 8, "task_id": "ret-path-2-023"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5"], "n_steps": 8, "task_id": "ret-path-2-024"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4"], "n_steps": 5, "task_id": "ret-path-2-025"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5"], "n_steps": 7, "task_id": "ret-path-2-026"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7"], "n_steps": 6, "task_id": "ret-path-2-027"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7"], "n_steps": 9, "task_id": "ret-path-2-028"}
+{"family": "ret-path", "entries": ["e0", "e1", "e2", "e3", "e4", "e5", "e6"], "n_steps": 9, "task_id": "ret-path-2-029"}

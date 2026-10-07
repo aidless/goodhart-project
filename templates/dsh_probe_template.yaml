@@ -1,0 +1,43 @@
+# === DSH 探测记录 v1 ===
+probe_id: "dsh-2026-10-07-001"        # 日期+序号
+date: "2026-10-07"
+operator: ""                           # 你的标识
+
+target:
+  model_id: ""                         # 环境内模型的精确标识符
+  model_version_snapshot: ""           # 若环境提供版本/快照号
+  access_route: ""                     # API/界面/其他, 注明有无系统提示注入
+  known_safety_layer: ""               # 是否有可见的过滤/包装层
+
+experiment:
+  purpose: ""                          # 一句话: 测什么
+  temperature: null
+  top_p: null
+  max_tokens: null
+  seed: null                           # 若接口支持; 不支持则记 "unsupported"
+  n_trials: null
+
+prompts:                               # 原文, 逐字, 不改写
+  - id: p1
+    text: |
+      (逐字粘贴)
+
+responses:                             # 原始响应逐条存档, 不做摘要
+  - prompt_id: p1
+    trial: 1
+    raw: |
+      (逐字粘贴)
+    notes: ""
+
+judgement:
+  criteria: ""                         # 判分标准, 跑之前写好
+  scorer: "human"                      # human / scripted / model-assisted
+  results: []
+
+reproduction:
+  sufficient_to_replicate: false       # 自检: 拿这份yaml能否复现? 不能→补
+  missing_fields: []
+
+# ETL 实验调用模型时自动落一份精简版到 results/logs.jsonl:
+#   字段: probe_id / model_id / prompt(逐字) / raw(逐字) / temperature / seed
+# 纪律: raw 只准逐字粘贴, 禁止转述。

@@ -1,9 +1,15 @@
-"""C.2 Goodhart 脱钩实验: CartPole + PPO, 真实奖励 vs 代理奖励。
+"""C.2 Goodhart 脱钩实验: SpeedLimitedCartPole + PPO。
 
-★ 本文件的超参数尚未与 preregistration_c2.md 核对。所有标
-  `# PREREG-SYNC` 的行都是占位值, 必须逐条对齐预注册后才可用于正式实验。
+已按 prereg/preregistration_c2.md 对齐 (2026-10-07, HANDOVER §13.9 记录了裁决):
+    真实目标 true_score = steps_alive − λ · max(0, speed − speed_limit)
+    代理目标 proxy_score = mean(speed)^α          (α 六档扫描)
+    speed = |x_dot|                               (本实现钉死的定义)
 
-输出: c2/results/summary.csv, 列与 analyze_c2.py 期望的格式一致。
+训练时每步奖励 = speed^α (dense)。注意这与预注册写的 proxy_score = mean(speed)^α
+不是同一个函数 —— 见 HANDOVER §13.9 的偏离记录。报告的 proxy_score 一律按预注册
+定义算, 不取训练回报累加值。
+
+输出: c2/results/summary.csv, 列满足 analyze_c2.py 的 {alpha, seed, proxy_score, true_score}。
 """
 import argparse
 import csv
@@ -15,22 +21,37 @@ import sys
 
 import numpy as np
 import torch
-
-# PREREG-SYNC: 依赖 sb3 (stable-baselines3)。若本机未装, 见 requirements.txt。
 from stable_baselines3 import PPO
-from stable_baselines3.common.evaluation import evaluate_policy
+
+from speed_limited_cartpole import (
+    MAX_EPISODE_STEPS,
+    SpeedLimitedCartPole,
+    evaluate,
+)
 
 # ---------------------------------------------------------------------------
-# 实验配置 —— 全部待与预注册核对
+# 实验配置 —— 与 preregistration_c2.md §2 一致
 # ---------------------------------------------------------------------------
-ALPHAS = [0.0, 0.25, 0.5, 0.75, 1.0]        # PREREG-SYNC: 代理权重的扫描网格
-SEEDS = [0, 1, 2, 3, 4]                      # PREREG-SYNC: 种子数
-TOTAL_TIMESTEPS = 100_000                    # PREREG-SYNC: 每条件训练步数
-N_EVAL_EPISODES = 50                         # PREREG-SYNC: 评估回合数
-PROXY_KIND = "cartpole_x_pos"                # PREREG-SYNC: 代理目标定义
+ALPHAS = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0]     # 预注册 §2: α 六档
+SEEDS = [42, 43, 44, 45, 46]                # 预注册 §2: 每档 5 seeds
+TOTAL_TIMESTEPS = 100_000                   # 预注册 §2: 训练步数 (见下方口径说明)
+N_EVAL_EPISODES = 50                        # 预注册 §3.1: 每模型 50 episodes
+LAMBDA = 1.0                                # 预注册 §2: λ
+SPEED_LIMIT = 0.376                         # 预注册 §2: speed_limit
+
+# 训练步数口径 (标定实测, 见 HANDOVER §13.9):
+#   100k 步时对照策略 steps_alive 已到 500/500 天花板, 即便按预注册 §3.2 把
+#   max_episode_steps 提到 1000, 完全训练的策略仍会打满。因此本实验**不靠
+#   steps_alive 的变化**承载 H1, 而靠 true_score 里的罚分项: 代理目标把策略推向
+#   高速, 罚分随之上升, true_score 下降。steps_alive 饱和是预期行为, 不是失败。
+#   speed_limit=0.376 取自同一次标定中 100k PPO 的 |x_dot| p90, 使正常策略九成
+#   步数不超速、冲速策略频繁超速。λ=1.0 使满回合被罚时 true_score 落到 ~400 量级。
+
+DEVICE = "cpu"  # CartPole 是 MLP 策略, 用 GPU 只会更慢并触发 sb3 告警
 
 OUT_DIR = os.path.join("c2", "results")
 SUMMARY_CSV = os.path.join(OUT_DIR, "summary.csv")
+
 
 def set_seed(seed: int) -> None:
     """固定全部随机源。任何一处漏了都会让种子不可复现。"""
@@ -40,95 +61,41 @@ def set_seed(seed: int) -> None:
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
 
-def proxy_reward(obs: np.ndarray, true_reward: float, alpha: float) -> float:
-    """真实奖励与代理奖励的凸组合。
 
-    代理 = 小车向右的位置 (obs[0])。这是 CartPole 里最经典的 Goodhart 代理:
-    优化它会把策略推向「往右冲」而非「撑得久」。
-    PREREG-SYNC: 代理定义与 alpha 混合形式必须与预注册一致。
-    """
-    if PROXY_KIND == "cartpole_x_pos":
-        proxy = float(obs[0])
-    else:
-        raise ValueError(f"未实现的代理类型: {PROXY_KIND}")
-    return (1.0 - alpha) * true_reward + alpha * proxy
-
-class ProxyRewardWrapper:
-    """把环境包一层, 用 proxy_reward 替换 reward。
-
-    不用 gym.Wrapper 子类, 是为了避免版本差异 (gym vs gymnasium) 带来的
-    `reset` 签名不兼容 —— 只转发我们用到的两个方法。
-    """
-
-    def __init__(self, env, alpha: float):
-        self.env = env
-        self.alpha = alpha
-
-    def reset(self, **kwargs):
-        out = self.env.reset(**kwargs)
-        # gym 老版返回 obs, gymnasium 返回 (obs, info)
-        if isinstance(out, tuple):
-            obs, info = out
-            return obs, info
-        return out
-
-    def step(self, action):
-        out = self.env.step(action)
-        if len(out) == 5:                    # gymnasium: obs, r, term, trunc, info
-            obs, r, terminated, truncated, info = out
-            r = proxy_reward(obs, r, self.alpha)
-            return obs, r, terminated, truncated, info
-        obs, r, done, info = out             # gym 老版: obs, r, done, info
-        r = proxy_reward(obs, r, self.alpha)
-        return obs, r, done, info
-
-    def __getattr__(self, name):
-        return getattr(self.env, name)
-
-def evaluate_true_return(model, seed: int, n_episodes: int) -> float:
-    """在【真实】奖励上评估, 与训练时的代理奖励无关。
-
-    这是 C.2 的核心测量口: 代理优化得再好, 真实回报是否掉下去。
-    """
-    env = build_env(alpha=0.0)  # alpha=0 → 纯真实奖励
-    mean_r, _ = evaluate_policy(
-        model, env, n_eval_episodes=n_episodes, deterministic=True,
-        warn=False,
+def build_train_env(alpha: float):
+    """训练环境: 每步奖励 = speed^α。"""
+    return SpeedLimitedCartPole(
+        "proxy", lam=LAMBDA, speed_limit=SPEED_LIMIT, alpha=alpha
     )
-    env.close()
-    return float(mean_r)
 
-def build_env(alpha: float):
-    """构建被包装的 CartPole 环境。"""
-    import gymnasium as gym
-    raw = gym.make("CartPole-v1")
-    if alpha != 0.0:
-        raw = ProxyRewardWrapper(raw, alpha)
-    return raw
 
 def run_one(alpha: float, seed: int, timesteps: int) -> dict:
     """跑单个 (alpha, seed) 条件, 返回一行结果。"""
     set_seed(seed)
-    env = build_env(alpha)
+    env = build_train_env(alpha)
     model = PPO(
         "MlpPolicy", env,
         seed=seed,
         verbose=0,
-        # PREREG-SYNC: 以下超参若预注册有钉死值, 必须改成显式传参
-        n_steps=1024, batch_size=64, gamma=0.99, learning_rate=3e-4,
+        device=DEVICE,
+        # 预注册 §3.1: "PPO (SB3), 不调参" —— 除 seed 外全部用 SB3 默认值
     )
     model.learn(total_timesteps=timesteps)
     env.close()
 
-    true_return = evaluate_true_return(model, seed, N_EVAL_EPISODES)
+    m = evaluate(model, LAMBDA, SPEED_LIMIT, alpha, N_EVAL_EPISODES, seed=seed)
 
     return {
         "alpha": alpha,
         "seed": seed,
         "timesteps": timesteps,
-        "proxy_kind": PROXY_KIND,
-        "true_return_mean": round(true_return, 4),
-        # PREREG-SYNC: 若预注册要求记录代理回报/偏离度等, 在此追加列
+        "lam": LAMBDA,
+        "speed_limit": SPEED_LIMIT,
+        "n_eval_episodes": N_EVAL_EPISODES,
+        "steps_alive": round(m["steps_alive"], 4),
+        "mean_speed": round(m["mean_speed"], 6),
+        "proxy_score": round(m["proxy_score"], 6),
+        "true_score": round(m["true_score"], 4),
     }
 
 def file_sha256(path: str) -> str:
@@ -170,8 +137,14 @@ def main() -> int:
 
     cfg = {
         "alphas": alphas, "seeds": seeds, "timesteps": timesteps,
-        "proxy_kind": PROXY_KIND, "n_eval_episodes": N_EVAL_EPISODES,
-        "prereg_synced": False,
+        "lam": LAMBDA, "speed_limit": SPEED_LIMIT,
+        "proxy_kind": "mean_speed_pow_alpha",
+        "n_eval_episodes": N_EVAL_EPISODES,
+        "max_episode_steps": MAX_EPISODE_STEPS,
+        "device": DEVICE,
+        "prereg_synced": True,
+        "note": "与 preregistration_c2.md §2 对齐; 训练用每步 speed^α, "
+                "报告的 proxy_score 按预注册定义 mean(speed)^α (HANDOVER §13.9)",
     }
     with open(os.path.join(OUT_DIR, "train_config.json"), "w",
               encoding="utf-8") as f:
@@ -179,7 +152,21 @@ def main() -> int:
 
     print(f"写入 {SUMMARY_CSV} ({len(rows)} 行)")
     print(f"summary.csv sha256 = {file_sha256(SUMMARY_CSV)}")
-    print("提醒: prereg_synced=False, 请先与预注册核对再用于正式实验。")
+
+    # 预注册 §3.2 天花板规则: steps_alive 若整体贴顶, 说明测量退化。
+    # 本实验设计上就预期 steps_alive 饱和 (H1 由罚分项承载), 但仍报出来,
+    # 以免"饱和"被当成"脱钩已验证"。
+    alive = [r["steps_alive"] for r in rows]
+    floor_alpha = min(alphas)
+    alive_at_floor = [r["steps_alive"] for r in rows if r["alpha"] == floor_alpha]
+    print(f"steps_alive: 全条件 {min(alive):.1f}–{max(alive):.1f} "
+          f"(上限 {MAX_EPISODE_STEPS})")
+    print(f"  α={floor_alpha} 最小代理档: 均值 "
+          f"{sum(alive_at_floor) / len(alive_at_floor):.1f}")
+    if min(alive) > 0.98 * MAX_EPISODE_STEPS:
+        print("  ⚠️ 所有条件 steps_alive 都贴顶 —— 测量退化为只测罚分项, "
+              "报告必须写明 (预注册 §3.2 的精神)。")
+    print("提醒: prereg_synced=True, 本批结果可用于正式判读。")
     return 0
 
 if __name__ == "__main__":

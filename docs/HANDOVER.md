@@ -679,3 +679,58 @@ chain-sort 隐藏的是二值规则，故用规则域大小）。改后基线 0.
 = 两条线已产出数据，**"Q1–Q5 至少两条出数据"的解冻条件已满足**；
 是否解冻由作者决定（解冻 ≠ 自动开工，Q6 需全新任务设计）。
 
+### 13.13 B 线端到端打通：本地 Ollama 接入与首批真实数字（2026-10-08）
+
+**接入方式**：`src/ollama_model.py`（标准库 urllib）——本地 Ollama
+`http://127.0.0.1:11434/v1/chat/completions`，默认模型 **llama3.1:8b**
+（qwen3:4b 在 max_tokens=50 下被 thinking 占满、content 为空，实测不可用），
+temperature=0，timeout 60s，失败重试 1 次后返回 `__UNTESTED__` 不抛异常。
+`leak_check` 把 `__UNTESTED__` 计为 failed（不计入 total），全失败仍
+UNTESTED → GATE FAIL——**fail-closed 语义在真实接口下保持**。
+`leak_check` 支持 `--n-per-family`、`run_etl` 支持 `--tasks-per-family`
+确定性降采样（按 task_id 排序），均如实打印、不虚报全量。
+（小瑕疵记录：`run_etl.__main__` 注释提到 `ETL_MODEL_ID` 环境变量但未实现；
+logs.jsonl 的 model 字段实际正确记录为 llama3.1:8b，不影响数据。）
+
+**门禁实测（实跑记录 `etl/results/gate_run.log`，n_per_family=20 全量）**：
+
+| 族 | 命中 | 阈值 | 判定 |
+|---|---|---|---|
+| stateful-calc | 0/20 = 0.0% | 5.0% | CLEAN |
+| chain-sort | 0/20 = 0.0% | 125.0% | CLEAN |
+| ret-path | 0/20 = 0.0% | 11.0% | CLEAN |
+
+**GATE PASS（exit 0）**，UNTESTED=0，60 次调用全部成功。
+
+**ETL 真实跑**：90 任务（3 族 × 30）**614 步**，调用全成功（UNTESTED=0）；
+`audit_replay` 重放 614 步 **mismatch=0**（判分可复现）；四产物落
+`etl/results/`（logs.jsonl / fig_etl_curve / fig_error_decomp /
+table_detach + report_snippets）。
+
+**首批数字（llama3.1:8b）**：
+
+| 族 | 步准确率 | first_err_median |
+|---|---|---|
+| stateful-calc | 0.0235 | 0.0 |
+| chain-sort | 0.0 | 0.0 |
+| ret-path | 0.0 | 0.0 |
+
+步级合计：valid 5/614（0.8%），**correct 0/614**，err_type 标注 609 步。
+
+**如实边界（防两误读）**：
+1. **地板效应**：模型在第 0 步就几乎全错（first_err_median=0），不存在
+   "带病状态上继续推理"的样本——**误差分解（single vs cumulative）在本批
+   无作用面**，fig_error_decomp 的曲线是地板的形状，不是机制的形状。
+2. **门禁 CLEAN ≠ 泄漏检测能力被证明**：0% 命中源于模型太弱，不是门禁
+   灵敏度的正面证据；门禁的灵敏度论证仍以 selftest 反证 + stub 为准。
+
+**对研究队列的影响**：
+- **Q2（作弊恢复触发条件）/ Q4（短链外推长链）**：分析前提是"存在部分
+  正确步可供分解"，本批 correct=0 → **当前不可分析**。与 Q5 的教训同构
+  （机制在当前设置下无作用面）。出路是换更强模型（同一管线直接复用，
+  `OLLAMA_MODEL` 环境变量即可切换，或接更强本地/远程模型），属
+  重跑测量而非新设计。
+- **Q6**：解冻条件（Q1+Q5 两条线出数据）已满足，作者拍板解冻
+  （2026-10-08）。**解冻 = 允许立项设计，不等于自动开工**；Q6 需全新
+  任务设计，为防"第二个计划过载"，设计另立项、不并入现有线。
+

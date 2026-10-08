@@ -19,7 +19,7 @@
 
 <section class="doc-block" id="status-overview">
   <p>本页是 <strong>goodhart-project</strong> 的单页状态汇总。项目研究两件事：代理奖励失真如何导致可测量的目标脱钩（C.2 强化学习实验），以及语言模型在多步链式任务中的误差累积与"作弊恢复"（B 线 ETL 测量）。贯穿全部工作的方法论立场是：把占位符当数据、把未核验引用当事实、把没跑过的代码当能跑的代码，是本项目要防的三个坏习惯。</p>
-  <p>当前一句话状态：<strong>C.2 主实验已跑满 30/30 并判读「确认脱钩」；B 线测量基础设施全部就绪但真实数字被 LLM 接入阻塞；引用台账 17 条已全部处理（16 核实、1 条记录在案未采信）。</strong>页内全部数字来自仓库内脚本输出，来源与校验值见文末。</p>
+  <p>当前一句话状态：<strong>C.2 主实验已跑满 30/30 并判读「确认脱钩」；Q5 变体已完成（H1 否证，归因"惩罚无作用面"）；B 线已端到端打通——本地 Ollama（llama3.1:8b）门禁实测 PASS、ETL 真实跑 614 步、审计重放 mismatch=0，但首批数字呈地板效应（correct 0/614）；引用台账 17 条全部处理（16 核实、1 条如实标注采信边界）。</strong>页内全部数字来自仓库内脚本输出，来源与校验值见文末。</p>
 
   <div class="doc-callout" id="verdict-callout">
     <strong>C.2 判读（2026-10-08 裁定）：确认脱钩。</strong> 真实分数于 α=0.5 达峰（444.0，95% CI [431.9, 456.1]）后下降 86.6%–100.5%；α=1.0 档塌至 −2.2，且代理分数恰在该点达全程最大（1.376）——代理被最大程度优化的同时真实目标崩溃，构成清晰的 Goodhart 交叉。各失真档与峰值档的 bootstrap CI 无重叠，按 seed 配对差 SD 仅 15–16 分（远低于本设计 44.6 分的功效上限），实际功效 ≈ 1.0。
@@ -111,8 +111,8 @@
           </tr>
           <tr>
             <td><strong>二：B 链式任务 ETL</strong></td>
-            <td>🟡 基础设施就绪，测量被阻塞</td>
-            <td>门禁三处结清（chain-sort 误诊更正、sort_rule 卫生 bug、fail-open 补严）；stub 冒烟 4/4；回归测试 8/8。<strong>真实模型调用被"环境无 LLM 凭据"阻塞，ETL 真实数字尚不存在</strong></td>
+            <td>✅ 端到端打通（首批数字）</td>
+            <td>本地 Ollama（llama3.1:8b）作为真实 model_call；门禁实测三族 0/20 → GATE PASS；ETL 614 步、UNTESTED=0；audit_replay mismatch=0。首批数字呈<strong>地板效应</strong>（correct 0/614，stateful-calc 2.35%），误差分解无作用面（§13.13）</td>
           </tr>
           <tr>
             <td><strong>三：引用核验</strong></td>
@@ -127,24 +127,23 @@
     </figcaption>
   </figure>
 
-  <h3>B 线门禁链与唯一阻塞点</h3>
+  <h3>B 线门禁链（已打通）</h3>
   <figure class="doc-diagram" id="gate-chain">
     <div class="diagram-frame table-scroll mermaid-frame">
       <pre class="mermaid">
 flowchart LR
     A["gen_tasks.py<br/>生成任务 + 隐藏 schedules"] --> B["leak_check.py<br/>三族泄漏门禁"]
-    B -->|"CLEAN"| C["run_etl.py<br/>调用 LLM 逐步执行"]
+    B -->|"CLEAN"| C["run_etl.py<br/>llama3.1:8b (本地 Ollama)"]
     B -->|"LEAK / 无任务 / 缺 schedules"| X["中止<br/>fail-closed"]
-    C --> D["audit_replay.py<br/>重放审计 mismatch = 0"]
+    C -->|"614 步, UNTESTED=0"| D["audit_replay.py<br/>重放审计 mismatch = 0"]
     D --> E["analyze_etl.py<br/>图2 / 图3 / 表2"]
-    C -.- Z[("ETL 真实数字尚不存在<br/>阻塞：环境无 LLM 凭据")]
     style X fill:#f7f8fa,stroke:#9aa1ad
-    style Z fill:#fdf2f2,stroke:#b83f58
+    style E fill:#f0faf4,stroke:#0f766e
       </pre>
     </div>
     <figcaption class="figure-caption">
-      <strong>图2 · B 线门禁链</strong>
-      <span>红线为当前唯一阻塞点：第 3 步需要真实 LLM 调用。门禁语义为 fail-closed——任一族无任务、样本不足或 schedules 缺失都判 FAIL，绝不静默放行；已由五个 selftest 反证与 8 条回归测试守护。</span>
+      <strong>图2 · B 线门禁链（已端到端打通）</strong>
+      <span>阻塞点已解除：本地 Ollama（llama3.1:8b）接入后门禁实测 GATE PASS（三族 0/20，实跑记录 etl/results/gate_run.log），ETL 614 步、审计 mismatch=0。门禁语义仍为 fail-closed——任一族无任务、样本不足或 schedules 缺失都判 FAIL；由五个 selftest 反证 + 8 条回归测试守护。</span>
     </figcaption>
   </figure>
   <p>门禁的一个已记录设计局限：<strong>chain-sort 族永不触发 LEAK</strong>（阈值 1.25 高于命中率上限 1.0）——该族隐藏规则只有二值，盲猜者可枚举恰好 2 个候选、真实盲猜率≈0.5，判据为避免假阳性而牺牲了检出力；泄漏检测实际由 stateful-calc 与 ret-path 两族承担。这是任务族设计决定的结构性局限，不是可调阈值修掉的东西（详见 HANDOVER §13.10）。</p>
@@ -160,17 +159,17 @@ flowchart LR
         </thead>
         <tbody>
           <tr><td>Q1</td><td>代理失真强度 vs 脱钩程度的曲线形状</td><td>代理</td><td>🟢 <strong>已出首数据</strong>（本页 C.2 数据 + docs/q1_analysis.md）</td><td>✅ C.2 数据已产出</td></tr>
-          <tr><td>Q2</td><td>"作弊恢复"（记忆真值替代带病状态）的触发条件</td><td>测量</td><td>🟡</td><td>B 数据 → 卡 LLM 接入</td></tr>
-          <tr><td>Q4</td><td>短链误差模式能否外推长链可靠性</td><td>测量</td><td>🟡</td><td>B 数据 → 卡 LLM 接入</td></tr>
+          <tr><td>Q2</td><td>"作弊恢复"（记忆真值替代带病状态）的触发条件</td><td>测量</td><td>🟡</td><td>B 数据已出（614 步）但呈地板效应（correct 0/614），分析前提不满足；换更强模型重跑即可</td></tr>
+          <tr><td>Q4</td><td>短链误差模式能否外推长链可靠性</td><td>测量</td><td>🟡</td><td>同 Q2——地板效应下误差分解无作用面</td></tr>
           <tr><td>Q3</td><td>不可证伪命题的"降级"操作可否形式化</td><td>不可证伪</td><td>🟢 <strong>出文档</strong>（docs/q3_downgrade.md）</td><td>无（纯写作）</td></tr>
           <tr><td>Q5</td><td>惩罚规则可被模型察觉时行为是否改变</td><td>代理</td><td>🟢 已出首数据（H1 否证，归因"惩罚无作用面"；见 HANDOVER §13.12）</td><td>预注册已锁定（2326720）+ 10/10 完成</td></tr>
-          <tr><td>Q6</td><td>模型自报目标 vs 实际优化目标的相关性</td><td>—</td><td>🔴 冻结（解冻条件已满足，待作者决定）</td><td>Q1+Q5 已出数据（2026-10-08）</td></tr>
+          <tr><td>Q6</td><td>模型自报目标 vs 实际优化目标的相关性</td><td>—</td><td>🔓 已解冻（2026-10-08 作者拍板）</td><td>Q1+Q5 已出数据；解冻 = 允许立项设计，≠ 自动开工（需全新任务设计，另立项）</td></tr>
         </tbody>
       </table>
     </div>
   </figure>
   <div class="doc-callout">
-    <strong>Q6 解冻条件已满足</strong>：Q1（C.2 数据）与 Q5（同日，否证结果亦是数据）两条线已产出数据。"Q1–Q5 至少两条出数据"的条件达成，是否解冻由作者决定——解冻 ≠ 自动开工（Q6 需全新任务设计）。
+    <strong>Q6 已解冻</strong>：Q1（C.2 数据）与 Q5（同日，否证结果亦是数据）两条线已产出数据，解冻条件达成，作者已拍板解冻（2026-10-08）。下一步是全新任务设计——按冻结理由（防"第二个计划过载"），设计另立项、不并入现有线。
   </div>
 </section>
 
@@ -228,7 +227,7 @@ flowchart LR
       <li>n=5 seeds；实测 SD 15–16 分使本批对 15% 判据的实际功效 ≈1.0，但对更小效应（如 α=2.0 的局部回升是否稳定）功效不足。</li>
       <li>训练奖励是每步 speed^α，与报告量 mean(speed)^α 不是同一函数（预注册 §0.2 记录的已知偏离，两者单调同向）。</li>
       <li>Q1 曲线为 6 点网格，步长 0.5；回升峰的精确位置与 α* 的置信区间未定（α* 左删失于 0.5）。</li>
-      <li>B 线所有 ETL 数字均不存在；本页不含任何模型测量结果，只有基础设施验证（stub）。</li>
+      <li>B 线首批真实数字（llama3.1:8b）呈地板效应：correct 0/614、第一步即错——误差分解（single vs cumulative）在本批无作用面，Q2/Q4 当前不可分析；门禁 CLEAN 源于模型太弱，不是泄漏检测灵敏度的正面证据。</li>
       <li>本页数字若与仓库脚本输出冲突，以仓库文件为准（报告骨架纪律：数字只准来自脚本输出）。</li>
     </ul>
   </div>

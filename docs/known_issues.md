@@ -129,11 +129,15 @@ C。理由: 碰撞本身 (`entries[0]` 恒为 `'e0'`) 不只挡阈值推导 —�
       不可判别，属设计局限**：阈值 1.25 高于命中率上限 1.0，永不触发 LEAK
       （oracle 自检实测 `100.0% vs 阈值125.0% → CLEAN`）；泄漏检测由另两族
       承担。详见 `HANDOVER.md` §13.10(a)。
-- [x] **门禁链第 3–5 步** —— **基础设施冒烟已通过（2026-10-08）**：新增
-      `src/smoke_gate_chain.py`，用确定性 stub 验证 fail-closed 与
-      `run_etl→audit_replay→analyze_etl` 的数据契约；产物落临时目录，绝不进
-      `etl/results/`。**真实模型调用仍被『环境无 LLM 凭据』阻塞**，故 ETL 的
-      真实数字尚不存在。详见 `HANDOVER.md` §13.10(b)。
+- [x] **门禁链第 3–5 步** —— **已端到端打通（2026-10-08）**。先 stub 冒烟
+      （`src/smoke_gate_chain.py`，验证 fail-closed 与数据契约），后接入
+      **本地 Ollama（llama3.1:8b，标准库 urllib）** 作为真实 model_call：
+      门禁实测三族 **0/20 命中 → GATE PASS**（exit 0，实跑记录
+      `etl/results/gate_run.log`）；ETL 真实跑 90 任务 614 步（UNTESTED=0，
+      调用全成功），`audit_replay` 614 步 **mismatch=0**，四产物落
+      `etl/results/`。**首批真实数字呈地板效应**：correct 0/614
+      （stateful-calc 2.35%，其余两族 0%），第一步即错、误差分解无作用面。
+      详见 `HANDOVER.md` §13.13。
 - [x] **门禁的 schedules 缺失回退是 fail-open** —— **已修（2026-10-08）**：旧
       `_default_schedules()` 在真值表缺失时**现生成合成表**给门禁用，等于"门在验
       A、跑批用 B"。已拆为 `_require_schedules`（缺失即退出码 2 fail-closed）/

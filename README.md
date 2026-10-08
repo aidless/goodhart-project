@@ -90,9 +90,10 @@ bash run_all.sh
   从未在真实数据上跑过。~~ **已结清（2026-10-08）**：`chain-sort` 原记录是**误诊**
   —— 该族隐藏规则只有二值，盲猜者可枚举恰好 2 个候选，真实盲猜率 ≈0.5，故 25%
   泄漏者判 CLEAN 本属正确；基线已改为 `1/(公开信息下可推导候选数)`，并移除 public
-  白名单里的 `sort_rule`。门禁链 3–5 步用确定性 stub 做了基础设施冒烟（`src/smoke_gate_chain.py`，
-  产物落临时目录）；**真实模型调用仍被"环境无 LLM 凭据"阻塞**，ETL 真实数字尚不存在。
-  见 `docs/known_issues.md` 与 `docs/HANDOVER.md` §13.10。
+  白名单里的 `sort_rule`。门禁链 3–5 步已**端到端打通**：本地 Ollama（llama3.1:8b）
+  作为真实 `model_call`，门禁实测三族 0/20 → GATE PASS，ETL 真实跑 614 步、
+  `audit_replay` mismatch=0；首批数字呈地板效应（correct 0/614），误差分解无作用面。
+  见 `docs/known_issues.md` 与 `docs/HANDOVER.md` §13.10、§13.13。
 
 - `etl/data/schedules/schedules.pkl` 不入库（防 git 通道泄漏真值），只留 `SHA256.txt` 锚点。
   见 `.gitignore`。

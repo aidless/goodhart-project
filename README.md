@@ -31,6 +31,7 @@ goodhart-project/
 │   └── HANDOVER.md                  # 跨会话交接（§0–§12 已补齐；§13 登记与磁盘的差异）
 ├── templates/
 │   └── dsh_probe_template.yaml      # DSH 探测记录模板
+├── report/                          # 单页研究状态应用 (离线 HTML; 打开 report/index.html)
 ├── requirements.txt
 └── run_all.sh
 ```

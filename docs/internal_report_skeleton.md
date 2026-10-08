@@ -22,7 +22,7 @@
    - 2.3 结果
      【表1: 各组 true_score mean±CI + detach_ratio】
      【图1: fig1_detach_curve.pdf】
-   - 2.4 讨论: 三档措辞按预注册第3节, 不额外发挥
+   - 2.4 讨论: 三档措辞按预注册第3节, 不额外发挥 (档位已裁定「确认脱钩」; 定稿措辞与第3条件偏离标注见 HANDOVER §13.11)
    - 2.5 限制: CartPole 天花板 / PPO 未调参 / 5 seeds 功效
 
 ## 3. B: 链式任务 ETL 与误差分解 (2200 字)

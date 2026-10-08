@@ -5,6 +5,11 @@ import os
 import pickle
 import random
 
+# chain-sort 的隐藏规则域。抽成常量是为了让 leak_check 的盲猜基线
+# 能与生成器共用同一个定义 —— 候选数必须由"规则域大小"推导, 不能拍脑袋。
+SORT_RULES = ("asc", "desc")
+
+
 def make_stateful_calc(rng, n_steps=None):
     """整数规则链: 每步施加一个隐藏算子。"""
     x0 = rng.randint(1, 9)
@@ -18,7 +23,7 @@ def make_chain_sort(rng, n_steps=None):
     m = rng.randint(3, 6)
     init_seq = [rng.randint(1, 20) for _ in range(m)]
     n = n_steps or rng.randint(4, 9)
-    sort_rule = rng.choice(["asc", "desc"])
+    sort_rule = rng.choice(SORT_RULES)
     return {"family": "chain-sort", "init_seq": init_seq,
             "sort_rule": sort_rule, "n_steps": n}
 
@@ -98,10 +103,13 @@ def main(n_per_family=30, seed=0,
             s["truth_chain"] = _truth_chain(s)
             schedules[tid] = s
 
-            # 公开任务: 只含公开字段, 绝不含 truth_chain
+            # 公开任务: 只含公开字段, 绝不含 truth_chain。
+            # sort_rule 与 ops 一样是**隐藏规则**, 不进公开文件:
+            # 否则拿到 tasks.jsonl 就能直接算出每个 k 的真值, 泄露答案键。
+            # (run_etl.build_prompt 本来就不读 sort_rule, 去掉它不影响跑批)
             public = {k: v for k, v in s.items()
                       if k in ("task_id", "family", "n_steps",
-                               "x0", "init_seq", "sort_rule", "entries")}
+                               "x0", "init_seq", "entries")}
             public["task_id"] = tid
             tasks.append(public)
 

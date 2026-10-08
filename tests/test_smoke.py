@@ -5,9 +5,13 @@
 所以这个文件在任何阶段的仓库里都不会误报失败。
 """
 import ast
+import hashlib
+import json
 import pathlib
+import pickle
 import subprocess
 import sys
+import tempfile
 
 import pytest
 
@@ -61,3 +65,72 @@ def test_leak_check_selftest_passes():
     r = subprocess.run([sys.executable, str(script), "--selftest"],
                        cwd=ROOT, capture_output=True, text=True)
     assert r.returncode == 0, f"--selftest 失败:\n{r.stdout}\n{r.stderr}"
+
+def test_chain_sort_baseline_derives_from_rule_domain():
+    """chain-sort 盲猜基线 == 1/(规则域内可推导候选数), 且候选 ≤ |规则域|。
+
+    这是 2026-10-08 判据修正的回归网。旧基线 1/(len(init_seq)+1) 无推导依据,
+    且低于真实盲猜率 (0.5), 把诚实枚举者误判为 LEAK。见 docs/known_issues.md。
+    """
+    sched = ROOT / "etl" / "data" / "schedules" / "schedules.pkl"
+    if not sched.exists() or not (SRC / "leak_check.py").exists():
+        pytest.skip("schedules.pkl 或 leak_check.py 不存在")
+    sys.path.insert(0, str(SRC))
+    import gen_tasks
+    import leak_check
+
+    schedules = pickle.loads(sched.read_bytes())
+    probe = leak_check.ChainSortProbe()
+    seen = 0
+    for s in schedules.values():
+        if s["family"] != "chain-sort":
+            continue
+        for k in range(1, s["n_steps"]):
+            outs = set()
+            for rule in gen_tasks.SORT_RULES:
+                seq = list(s["init_seq"])
+                for _ in range(k + 1):        # truth_chain[k] = k+1 次变换
+                    seq = gen_tasks.apply_chain_sort(seq, 0, rule)
+                outs.add(tuple(seq))
+            assert len(outs) <= len(gen_tasks.SORT_RULES), "候选数不能超过规则域"
+            assert probe.random_baseline(s, k, [s]) == pytest.approx(1.0 / len(outs))
+            seen += 1
+    assert seen > 0, "没找到 chain-sort 样本, 判据未真正被验证"
+
+def test_hidden_rules_not_in_public_tasks():
+    """公开 tasks.jsonl 不得含任何隐藏规则/真值字段。"""
+    tasks = ROOT / "etl" / "data" / "tasks" / "tasks.jsonl"
+    if not tasks.exists():
+        pytest.skip("tasks.jsonl 不存在")
+    hidden = ("sort_rule", "ops", "truth_chain", "ptr", "values")
+    for line in tasks.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        d = json.loads(line)
+        for field in hidden:
+            assert field not in d, f"{d.get('task_id')} 泄露隐藏字段 {field!r}"
+
+def test_gate_chain_smoke_passes():
+    """门禁链第 3–5 步的基础设施冒烟测试必须通过 (确定性 stub, 非模型测量)。"""
+    script = SRC / "smoke_gate_chain.py"
+    if not script.exists() or not (ROOT / "etl" / "data" / "schedules" / "schedules.pkl").exists():
+        pytest.skip("smoke_gate_chain.py 或 schedules.pkl 不存在")
+    r = subprocess.run([sys.executable, str(script)], cwd=ROOT,
+                       capture_output=True, text=True)
+    assert r.returncode == 0, f"门禁链冒烟失败:\n{r.stdout}\n{r.stderr}"
+
+def test_gate_fails_closed_when_schedules_missing():
+    """盘上没有真值表时, 门禁必须拒绝放行, 绝不现生成一份顶替 (fail-open 漏洞)。
+
+    在空目录里跑 leak_check.py: `etl/data/schedules/schedules.pkl` 不存在,
+    期望非零退出且报出「找不到」, 而不是静默用合成数据验门。
+    """
+    script = SRC / "leak_check.py"
+    if not script.exists():
+        pytest.skip("leak_check.py 不存在")
+    with tempfile.TemporaryDirectory() as td:
+        r = subprocess.run([sys.executable, str(script)], cwd=td,
+                           capture_output=True, text=True)
+    assert r.returncode != 0, f"缺真值表时门禁竟然放行 (fail-open!):\n{r.stdout}"
+    assert "找不到" in (r.stdout + r.stderr), r.stdout + r.stderr
+

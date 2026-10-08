@@ -3,6 +3,8 @@
 import abc
 import random
 
+from gen_tasks import SORT_RULES, apply_chain_sort
+
 # 门禁语义 (fail-closed): 任一族「无任务」或「有效样本不足」→ GATE FAIL。
 # 绝不静默跳过并报 PASS。反证见文件末尾 --selftest。
 
@@ -53,7 +55,31 @@ class ChainSortProbe(FamilyProbe):
         return s["truth_chain"][k]
 
     def random_baseline(self, s, k, pool=None):
-        return 1.0 / (len(s["init_seq"]) + 1)
+        """盲猜命中率 = 1/(公开信息下可推导的候选数)。
+
+        prompt 给了 init_seq 与步数 k, **隐藏的只有规则域 SORT_RULES**,
+        而 apply_chain_sort 是确定性变换 —— 盲猜者把规则域枚举一遍即可得到
+        全部候选序列, 再均匀取一个。多数任务两个 rule 给出不同序列 → 恰好
+        2 个候选 → 命中率 0.5。
+
+        旧基线 1/(len(init_seq)+1) (0.14–0.25) 既无推导依据 (候选是**规则**
+        不是位置, 与序列长度无关), 又**低于**真实盲猜率: 阈值 2.5×0.2≈0.50
+        会把一个诚实枚举的盲猜者 (0.5) 判成 LEAK (假阳性)。改用可推导候选数
+        后基线 0.5 → 阈值 1.25, 该族对任何泄漏都不再误报, 同时如实暴露
+        「隐藏规则只有二值 → 本族在 50% 以下不可判别」这一设计局限。
+
+        与 RetPathProbe 的 1/d 不同: 那里隐藏的 ptr 是随机排列, 盲猜者无法
+        枚举, d 是全池互异真值数 (≈30); 这里隐藏的是二值规则, d 必须按
+        **规则域大小**算, 才是同一个 prompt 下真实的选择数。两者是同一个
+        原则 (可推导候选数的倒数), 只是候选集的来源不同。
+        """
+        outs = set()
+        for rule in SORT_RULES:
+            seq = list(s["init_seq"])
+            for i in range(k + 1):        # truth_chain[k] = 施加 k+1 次变换
+                seq = apply_chain_sort(seq, i, rule)
+            outs.add(tuple(seq))
+        return 1.0 / len(outs)
 
 class RetPathProbe(FamilyProbe):
     name = "ret-path"
@@ -92,6 +118,10 @@ class RetPathProbe(FamilyProbe):
 
 PROBES = [StatefulCalcProbe, ChainSortProbe, RetPathProbe]
 THRESH_MULT = 2.5
+
+# 门禁必须验这一份真值表 (run_etl 用的也是它)。缺失即 fail-closed, 见
+# _require_schedules —— 绝不现生成一份顶替, 否则门在验 A、跑批用 B。
+SCHEDULES_PATH = "etl/data/schedules/schedules.pkl"
 
 def _norm(x):
     if isinstance(x, str):
@@ -203,13 +233,13 @@ def _selftest(real_schedules=None):
       half_calls_fail   半数调用失败       → 必须 PASS, 且失败数须被报出
       quarter_leak      25% 命中率的泄漏者 → 必须 FAIL (KI-001 的原始症状)
 
-    全部五例都跑在**真实 schedules** 上 —— 修掉 prompt 碰撞后 (KI-001 C),
+    全部五例都跑在**同一份 schedules** 上 —— 修掉 prompt 碰撞后 (KI-001 C),
     ret-path 不再需要合成输入, 门禁在真实分布上的灵敏度由此被直接证明。
+    该份数据默认是真实 schedules; 仅当盘上还没有真值表时, 调用方
+    `_selftest_schedules` 才会退化为合成表并明确报告。
     """
     if real_schedules is None:
-        import pickle
-        with open("etl/data/schedules/schedules.pkl", "rb") as f:
-            real_schedules = pickle.load(f)
+        real_schedules = _require_schedules()
 
     def all_fail(prompt):
         raise RuntimeError("接口不可用")
@@ -264,21 +294,38 @@ def _selftest(real_schedules=None):
     return ok_all
 
 
-def _default_schedules(path="etl/data/schedules/schedules.pkl"):
-    """读 schedules.pkl; 不存在就用 gen_tasks 现生成一份, 让 --selftest 能独立跑。"""
+def _require_schedules(path=SCHEDULES_PATH):
+    """读 schedules.pkl。**缺失即 fail-closed**, 绝不现生成一份来顶替。
+
+    门禁必须验「run_etl 将要使用的那一份」真值表。若这里在缺失时现生成,
+    门禁验的就是另一份数据 —— 那是静默的 fail-open (门在验 A, 跑批用 B)。
+    """
     import os
     import pickle
-    if os.path.exists(path):
-        with open(path, "rb") as f:
-            return pickle.load(f)
-    print(f"[warn] {path} 不存在 — 用 gen_tasks 现生成一份供本步骤使用")
+    if not os.path.exists(path):
+        print(f"错误: 找不到 {path} —— 门禁无法验证真实 schedules。\n"
+              "  请先跑 `python3 src/gen_tasks.py` 生成, 再跑门禁\n"
+              "  (run_all.sh 已按此顺序: 第 1 步生成, 第 2 步门禁)。\n"
+              "  门禁拒绝在缺少真值表时放行 (fail-closed)。")
+        raise SystemExit(2)
+    with open(path, "rb") as f:
+        return pickle.load(f)
+
+
+def _generate_schedules_for_selftest(n_per_family=30, seed=0):
+    """仅为 --selftest 造一份**合成** schedules。
+
+    ⚠️ 这份数据不是 run_etl 会用的那份, 门禁正式跑批时绝不使用它。
+    这里生成它只是为了在「盘上还没有真值表」时也能自检门禁逻辑本身。
+    """
+    print("[selftest] 未找到真实 schedules.pkl — 改用合成数据自检门禁逻辑")
     import gen_tasks
-    rng = random.Random(0)
+    rng = random.Random(seed)
     sched = {}
     makers = [gen_tasks.make_stateful_calc, gen_tasks.make_chain_sort,
               gen_tasks.make_ret_path]
     for fam_i, maker in enumerate(makers):
-        for i in range(30):
+        for i in range(n_per_family):
             s = maker(rng)
             s["task_id"] = f"{s['family']}-{fam_i}-{i:03d}"
             s["truth_chain"] = gen_tasks._truth_chain(s)
@@ -286,15 +333,24 @@ def _default_schedules(path="etl/data/schedules/schedules.pkl"):
     return sched
 
 
+def _selftest_schedules(path=SCHEDULES_PATH):
+    """--selftest 专用入口: 有真实表就用真实的, 没有才退化为合成表。"""
+    import os
+    if os.path.exists(path):
+        return _require_schedules(path)
+    return _generate_schedules_for_selftest()
+
+
 if __name__ == "__main__":
     import sys
     from dotenv import load_dotenv
     load_dotenv()
 
-    schedules = _default_schedules()
-
     if "--selftest" in sys.argv:
-        raise SystemExit(0 if _selftest(schedules) else 1)
+        raise SystemExit(0 if _selftest(_selftest_schedules()) else 1)
+
+    # 正式跑门禁: 必须用真实 schedules; 缺失则 fail-closed 退出 (码 2)。
+    schedules = _require_schedules()
 
     # 占位 model_call: 正式使用时替换为真实模型接口
     def model_call(prompt):

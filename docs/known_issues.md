@@ -79,10 +79,10 @@
 
 ### 实施未覆盖的残留（另记，非本 KI）
 
-`chain-sort` 族对同一个 25% 泄漏者仍判 **CLEAN**（阈值 48.1%）。其基线是
-`1/(len(init_seq)+1)` = 0.14–0.25，阈值本就偏松。这不属于 KI-001（本 KI 的
-症状在 ret-path），且三族的基线语义本就不同（把 `1/d` 套到 stateful-calc 会把
-阈值从 0.05 **放宽**到约 0.125），故未一并改。**列为新的已知未决项。**
+`chain-sort` 族对同一个 25% 泄漏者仍判 CLEAN。当时记为"基线偏松"，
+**2026-10-08 取证后更正：这是误诊** —— 25% 低于该族真实盲猜率 (≈0.5)，
+判 CLEAN 是对的；真正的问题是隐藏规则只有二值、该族对 50% 以下泄漏不可判别。
+结清记录见文末"新开"与 `HANDOVER.md` §13.10(a)。
 
 ### 验收判据（避免又变成"看起来改好了"）
 
@@ -117,8 +117,25 @@ C。理由: 碰撞本身 (`entries[0]` 恒为 `'e0'`) 不只挡阈值推导 —�
 
 ### 新开（本次实施中发现，非 KI-001 原范围）
 
-- [ ] **`chain-sort` 族阈值偏松**：基线 `1/(len(init_seq)+1)`，对 25% 泄漏者判
-      CLEAN（阈值 48.1%）。需单独推导其盲猜基线（候选是序列，不是标量）。
-- [ ] **门禁链第 3–5 步从未在真实数据上跑过**：`run_all.sh` 在门禁处 fail-closed
-      中止（`model_call` 是占位实现）。需接入真实模型接口后才能验证
-      run_etl / audit_replay / analyze_etl。
+- [x] **`chain-sort` 族判据** —— **已结清（2026-10-08）**。原记录"阈值偏松"是
+      **误诊**：该族隐藏规则只有二值（`asc`/`desc`），`apply_chain_sort` 是确定性
+      变换 → 盲猜者能枚举出**恰好 2 个候选**，真实盲猜率 ≈ **0.5150**（实测）。
+      旧基线 `1/(len(init_seq)+1)`=0.199 → 阈值 0.498 < 0.515，会把**诚实的枚举
+      盲猜者**判成 LEAK（假阳性）；而 25% 泄漏者判 CLEAN 本就正确（0.25 低于盲猜
+      水平，不构成泄漏证据）。已把基线改为 `1/(公开信息下可推导的候选数)`
+      （与 ret-path 同一原则），并顺带修掉 `gen_tasks` public 白名单泄露
+      `sort_rule` 的卫生 bug（schedules SHA256 未变）。**该族对 50% 以下泄漏
+      不可判别，属设计局限**，详见 `HANDOVER.md` §13.10(a)。
+- [x] **门禁链第 3–5 步** —— **基础设施冒烟已通过（2026-10-08）**：新增
+      `src/smoke_gate_chain.py`，用确定性 stub 验证 fail-closed 与
+      `run_etl→audit_replay→analyze_etl` 的数据契约；产物落临时目录，绝不进
+      `etl/results/`。**真实模型调用仍被『环境无 LLM 凭据』阻塞**，故 ETL 的
+      真实数字尚不存在。详见 `HANDOVER.md` §13.10(b)。
+- [x] **门禁的 schedules 缺失回退是 fail-open** —— **已修（2026-10-08）**：旧
+      `_default_schedules()` 在真值表缺失时**现生成合成表**给门禁用，等于"门在验
+      A、跑批用 B"。已拆为 `_require_schedules`（缺失即退出码 2 fail-closed）/
+      `_generate_schedules_for_selftest`（仅自检，且明确报告用合成数据）/
+      `_selftest_schedules`。回归测试
+      `test_gate_fails_closed_when_schedules_missing`。详见 `HANDOVER.md` §13.10(c)。
+
+

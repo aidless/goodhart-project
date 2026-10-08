@@ -51,12 +51,11 @@ goodhart-project/
 
 `run_all.sh` 只跑 **B 管线**（任务生成 → 门禁 → ETL → 审计 → 分析）。
 
-**C.2 的训练脚本已存在（`src/train_c2.py`），但它尚未与预注册对齐，不能开跑。**
-该文件自己标了 `PREREG-SYNC` 占位，并且**其实现与预注册/交接文档描述的设计不一致**
-（预注册要求 `SpeedLimitedCartPole` + 代理 `speed^α`；实现是纯 CartPole + 代理
-`obs[0]`）。`run_all.sh` 也不包含 C.2 训练环节，所以跑完不会出现图1，这**不是遗漏**。
-`analyze_c2.py` 在缺 `summary.csv` 时会以缺文件退出，属预期。
-详见 `docs/HANDOVER.md` §13.2、§13.8。
+**C.2 已完成**：`src/train_c2.py` 已与预注册对齐（`prereg_synced=true`，30/30
+= 6 档 α × 5 seeds × 100k 步跑满），`analyze_c2.py` 已出图1/表1，判读为
+「确认脱钩」（第 3 条件字面偏离的标注与报告定稿措辞见 §13.11；对齐过程见 §13.9）。
+`run_all.sh` 仍只覆盖 B 管线、不含 C.2 训练环节（训练需单独跑，见下方"快速开始"），
+这**不是遗漏**；C.2 产物在 `c2/results/`（不入库，sha256 锚点记于预注册 §4）。
 
 ## 快速开始
 
@@ -85,8 +84,14 @@ bash run_all.sh
   **已修（KI-001 C，2026-10-07）**：三族 prompt 现在前置公开的 `task_id`（消除
   prompt 碰撞），`ret-path` 基线改为 `1/(同 k 上互异真值个数)`。实测 25% 泄漏者
   判 LEAK，500 个随机种子下 500/500。详见 `docs/known_issues.md`。
-- **仍未决**：`chain-sort` 族阈值偏松（25% 泄漏者在该族仍判 CLEAN）；门禁链
+- ~~**仍未决**：`chain-sort` 族阈值偏松（25% 泄漏者在该族仍判 CLEAN）；门禁链
   第 3–5 步（run_etl / audit_replay / analyze_etl）因 `model_call` 是占位实现，
-  从未在真实数据上跑过。见 `docs/leak_audit_checklist.md`。
+  从未在真实数据上跑过。~~ **已结清（2026-10-08）**：`chain-sort` 原记录是**误诊**
+  —— 该族隐藏规则只有二值，盲猜者可枚举恰好 2 个候选，真实盲猜率 ≈0.5，故 25%
+  泄漏者判 CLEAN 本属正确；基线已改为 `1/(公开信息下可推导候选数)`，并移除 public
+  白名单里的 `sort_rule`。门禁链 3–5 步用确定性 stub 做了基础设施冒烟（`src/smoke_gate_chain.py`，
+  产物落临时目录）；**真实模型调用仍被"环境无 LLM 凭据"阻塞**，ETL 真实数字尚不存在。
+  见 `docs/known_issues.md` 与 `docs/HANDOVER.md` §13.10。
+
 - `etl/data/schedules/schedules.pkl` 不入库（防 git 通道泄漏真值），只留 `SHA256.txt` 锚点。
   见 `.gitignore`。

@@ -21,8 +21,24 @@ def build_prompt(task, k):
                 f"请直接给出到达条目的关键值（只输出该值）。")
     return ""
 
-def run(model_call, out_path="etl/results/logs.jsonl"):
+def run(model_call, out_path="etl/results/logs.jsonl", tasks_per_family=None):
     tasks = load_tasks()
+    # 降采样 (超时严重时每族只跑 N 个任务, 如实记录不虚报):
+    # tasks_per_family=None → 全量; 否则按族取排序后前 N 个 (确定性)。
+    if tasks_per_family is not None:
+        from collections import defaultdict as _dd
+        _by = _dd(list)
+        for t in tasks:
+            _by[t["family"]].append(t)
+        kept = []
+        for fam in sorted(_by):
+            grp = sorted(_by[fam], key=lambda x: x["task_id"])[:tasks_per_family]
+            kept.extend(grp)
+        print(f"[etl] 降采样: 每族 {tasks_per_family} 任务 "
+              f"(共 {len(kept)}/{len(tasks)} 任务, 如实记录)")
+        tasks = sorted(kept, key=lambda x: x["task_id"])
+    else:
+        print(f"[etl] 全量: {len(tasks)} 任务")
     validator = Validator()
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
 
@@ -57,6 +73,20 @@ def run(model_call, out_path="etl/results/logs.jsonl"):
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
 
 if __name__ == "__main__":
-    def model_call(prompt):
-        raise RuntimeError("请接入真实模型接口后再跑; 当前为占位")
-    run(model_call)
+    import os as _os
+    import sys as _sys
+    from ollama_model import model_call as _real_model_call
+    _tpf = None
+    if "--tasks-per-family" in _sys.argv:
+        _i = _sys.argv.index("--tasks-per-family")
+        try:
+            _tpf = int(_sys.argv[_i + 1])
+        except (IndexError, ValueError):
+            print("用法: run_etl.py [--tasks-per-family N]"); raise SystemExit(2)
+    elif _os.environ.get("ETL_TASKS_PER_FAMILY"):
+        try:
+            _tpf = int(_os.environ["ETL_TASKS_PER_FAMILY"])
+        except ValueError:
+            print("ETL_TASKS_PER_FAMILY 必须为整数"); raise SystemExit(2)
+    # ETL_MODEL_ID 由调用环境传入 (如 llama3.1:8b), 缺省 unknown。
+    run(_real_model_call, tasks_per_family=_tpf)

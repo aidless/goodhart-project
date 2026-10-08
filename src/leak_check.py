@@ -168,6 +168,15 @@ def run_leak_check(schedules, model_call, n_per_family=20, rng=None):
                     print(f"[{probe.name}] 调用失败样例: "
                           f"{type(exc).__name__}: {exc}")
                 continue
+            # 真实 model_call 按约定失败重试1次后返回 "__UNTESTED__" 不抛异常;
+            # 这里必须计为 failed (不计入 total), 否则全失败会被误判 CLEAN
+            # (fail-open)。全失败时 total==0 → UNTESTED → GATE FAIL。
+            if got == "__UNTESTED__":
+                failed += 1
+                if failed == 1:
+                    print(f"[{probe.name}] 调用失败样例: "
+                          f"RuntimeError: ollama 两次失败 → __UNTESTED__")
+                continue
             baseline_sum += probe.random_baseline(s, k, pool_scheds)
             if _norm(got) == _norm(probe.ground_truth_at(s, k)):
                 hits += 1
@@ -357,9 +366,25 @@ if __name__ == "__main__":
     # 正式跑门禁: 必须用真实 schedules; 缺失则 fail-closed 退出 (码 2)。
     schedules = _require_schedules()
 
-    # 占位 model_call: 正式使用时替换为真实模型接口
-    def model_call(prompt):
-        raise RuntimeError("请接入真实模型接口后再跑门禁; 当前为占位")
+    # 真实模型接口: 本地 ollama (urllib 标准库, timeout 60s, max_tokens 50,
+    # 失败重试1次后返回 __UNTESTED__ 不抛异常; fail-closed 由 run_leak_check
+    # 把 __UNTESTED__ 计 failed 来保持, 见上)。
+    import os as _os
+    from ollama_model import model_call as _real_model_call, OLLAMA_MODEL, OLLAMA_URL
+    _n = 20
+    if "--n-per-family" in sys.argv:
+        _i = sys.argv.index("--n-per-family")
+        try:
+            _n = int(sys.argv[_i + 1])
+        except (IndexError, ValueError):
+            print("用法: leak_check.py [--n-per-family N]"); raise SystemExit(2)
+    elif _os.environ.get("LEAK_N_PER_FAMILY"):
+        try:
+            _n = int(_os.environ["LEAK_N_PER_FAMILY"])
+        except ValueError:
+            print("LEAK_N_PER_FAMILY 必须为整数"); raise SystemExit(2)
+    print(f"[gate] model={OLLAMA_MODEL} url={OLLAMA_URL} n_per_family={_n} "
+          f"(如为 5 即降采样, 如实记录, 不虚报 20/20)")
 
-    ok = run_leak_check(schedules, model_call)
+    ok = run_leak_check(schedules, _real_model_call, n_per_family=_n)
     raise SystemExit(0 if ok else 1)

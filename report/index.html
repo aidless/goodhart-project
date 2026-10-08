@@ -123,7 +123,7 @@
       </table>
     </div>
     <figcaption class="figure-caption">
-      <span>状态以 git 提交 b1077fb / c0490ff（2026-10-08）为准。</span>
+      <span>状态以 2026-10-08 的 main 提交为准（C.2 判读: b1077fb；门禁措辞: c0490ff；应用/Q1/Q3/引用: 7d5d9f3；Q5 锁定: 2326720）。</span>
     </figcaption>
   </figure>
 
@@ -163,14 +163,14 @@ flowchart LR
           <tr><td>Q2</td><td>"作弊恢复"（记忆真值替代带病状态）的触发条件</td><td>测量</td><td>🟡</td><td>B 数据 → 卡 LLM 接入</td></tr>
           <tr><td>Q4</td><td>短链误差模式能否外推长链可靠性</td><td>测量</td><td>🟡</td><td>B 数据 → 卡 LLM 接入</td></tr>
           <tr><td>Q3</td><td>不可证伪命题的"降级"操作可否形式化</td><td>不可证伪</td><td>🟢 <strong>出文档</strong>（docs/q3_downgrade.md）</td><td>无（纯写作）</td></tr>
-          <tr><td>Q5</td><td>惩罚规则可被模型察觉时行为是否改变</td><td>代理</td><td>🟡 预注册草稿 + 代码就绪（见下）</td><td>C.2 变体</td></tr>
-          <tr><td>Q6</td><td>模型自报目标 vs 实际优化目标的相关性</td><td>—</td><td>🔴 冻结</td><td>解冻条件：Q1–Q5 至少两条出数据</td></tr>
+          <tr><td>Q5</td><td>惩罚规则可被模型察觉时行为是否改变</td><td>代理</td><td>🟢 已出首数据（H1 否证，归因"惩罚无作用面"；见 HANDOVER §13.12）</td><td>预注册已锁定（2326720）+ 10/10 完成</td></tr>
+          <tr><td>Q6</td><td>模型自报目标 vs 实际优化目标的相关性</td><td>—</td><td>🔴 冻结（解冻条件已满足，待作者决定）</td><td>Q1+Q5 已出数据（2026-10-08）</td></tr>
         </tbody>
       </table>
     </div>
   </figure>
   <div class="doc-callout">
-    <strong>Q6 解冻进度</strong>：目前只有 C.2 一条线出了数据（Q1），解冻条件"至少两条"未满足。Q6 保持冻结——任何"顺手先做一点"按队列纪律视为违纪。
+    <strong>Q6 解冻条件已满足</strong>：Q1（C.2 数据）与 Q5（同日，否证结果亦是数据）两条线已产出数据。"Q1–Q5 至少两条出数据"的条件达成，是否解冻由作者决定——解冻 ≠ 自动开工（Q6 需全新任务设计）。
   </div>
 </section>
 
@@ -193,10 +193,30 @@ flowchart LR
 </section>
 
 <section class="doc-block" id="q5-next">
-  <h2>Q5：下一个实验已备好（预注册草稿）</h2>
-  <p>Q5 操纵的不是奖励函数，而是<strong>观测通道</strong>：两组训练奖励完全相同（真实奖励的每步分量，含超速惩罚），差别只在策略能否从观测直接读出"我现在超速了多少"——blind 组 4 维原生观测（惩罚是隐藏函数），salient 组 6 维观测（附加即时超速量 over 与余量 margin）。若显式可见的惩罚改变行为，则"可察觉性"是 Goodhart 缓解的一个可行把手；若无差异，则说明策略从奖励标量已能学全惩罚规则——这本身是一个值得记录的否证结果。</p>
+  <h2>Q5：惩罚可察觉性实验——已完成，H1 否证</h2>
+  <p>操纵的不是奖励函数，而是<strong>观测通道</strong>：两组训练奖励完全相同（真实奖励的每步分量，含超速惩罚），差别只在策略能否从观测直接读出"我现在超速了多少"——blind 组 4 维原生观测（惩罚是隐藏函数），salient 组 6 维观测（附加即时超速量 over 与余量 margin）。预注册已于 2026-10-08 锁定（commit 2326720），10/10 训练跑满（2 arm × 5 seeds × 100k 步，<code>prereg_synced=true</code>）。</p>
+
+  <figure class="doc-table" id="q5-table">
+    <div class="table-scroll">
+      <table class="doc-data-table">
+        <thead><tr><th>arm</th><th>true_score</th><th>steps_alive</th><th>mean_speed</th><th>每50回合罚分合计</th></tr></thead>
+        <tbody>
+          <tr><td>blind（4 维 obs）</td><td>499.9926</td><td>500.0（饱和）</td><td>0.1072（限速的 28.5%）</td><td>0.0074 分</td></tr>
+          <tr><td>salient（6 维 obs）</td><td>499.9922</td><td>500.0（饱和）</td><td>0.1084（限速的 28.8%）</td><td>0.0078 分</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figcaption class="figure-caption">
+      <span>数据源：q5/results/summary_q5.csv（10 行，sha256 94584244…f8d6c6）。罚分由 true_score = steps_alive − λ·over_speed_sum 反推。</span>
+    </figcaption>
+  </figure>
+
   <div class="doc-callout">
-    <strong>当前状态（诚实边界）</strong>：<code>prereg/preregistration_q5.md</code> 为<strong>草稿，未经确认不得锁定</strong>；锁定前不得运行全量训练。实现 <code>src/train_q5.py</code> 已完成并通过冒烟测试（4096 步 × 2 arm，产物落 /tmp，train_config 的 prereg_synced=False 如实标记）。设计要点：2 arm × 5 seeds = 10 次训练（C.2 时长的 1/3），主比较为同 seed 配对差；功效声明与否证归因（二选一）已写入预注册 §3–§4。
+    <strong>判读（按锁定预注册 §3）</strong>：<strong>H1 未确认</strong>——true_score 配对差（salient−blind）mean −0.00035 分，95% bootstrap CI 与 0 不可区分，双臂贴顶（499.99/500），数据与 H0 一致。<strong>H2 形式判据满足、实质不成立（如实双记）</strong>——|mean_speed−limit| 配对差 CI 不含 0，但效应量仅为共同偏差的 0.5%，且两组同为"过度保守"而非假设的"压线 vs 冲速"。<strong>§3 否证归因 (a) 成立</strong>：true-奖励的最优策略是低速存活，惩罚区不可达，可察觉性操纵无作用面；按预注册纪律，禁止外推为"可察觉性不重要"。
+  </div>
+
+  <div class="doc-note">
+    <strong>[exploratory] 设计层教训</strong>：speed_limit=0.376 沿用 C.2 标定（基于 speed^α 优化策略的 p90），而 true-奖励训练下的策略天然低速——标定域与训练域错配，惩罚区在设计上就不可达。与既有教训同构："是真问题"不等于"在本局有作用面"。重做 Q5 需先让惩罚区可达（限速压到存活策略速度分布内如 ~0.09，或给存活加高速任务约束），属新实验、需新预注册。
   </div>
 </section>
 

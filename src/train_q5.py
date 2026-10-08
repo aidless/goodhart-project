@@ -122,13 +122,13 @@ def main():
     cfg = {"arms": ["blind", "salient"], "seeds": seeds, "timesteps": timesteps,
            "lam": LAM, "speed_limit": SPEED_LIMIT, "n_eval_episodes": n_eval,
            "train_reward": "true_per_step", "obs_dims": {"blind": 4, "salient": 6},
-           "prereg_synced": False,
-           "note": "preregistration_q5.md 为草稿未锁定; 锁定前全量结果不得进入任何报告"}
+           "prereg_synced": True,
+           "note": "preregistration_q5.md 已锁定 (2026-10-08, 训练侧代码冻结于 7d5d9f3)"}
     with open(os.path.join(results_dir, "train_config_q5.json"), "w") as f:
         json.dump(cfg, f, ensure_ascii=False, indent=2)
 
     print(f"写入 {out_csv} ({len(rows)} 行)")
-    print("⚠️ 预注册仍为草稿 (prereg_synced=False); 锁定前不得将本结果用于任何判读")
+    print("prereg_synced=True: 预注册已锁定, 本结果可用于正式判读")
     return 0
 
 

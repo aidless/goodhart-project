@@ -9,6 +9,7 @@ __pycache__/
 # 生成的结果 (可由 run_all.sh 重现)
 etl/results/
 c2/results/
+q5/results/
 
 # ★ 隐藏真值不入库。schedules.pkl 一旦进 git 历史, 任何拿到仓库的
 #   人——以及 DSH 工作流里任何拿到仓库的 AI 代理——都能读到真值,

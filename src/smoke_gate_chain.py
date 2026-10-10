@@ -136,9 +136,9 @@ def t4_chain_plumbing(schedules, workdir):
                      fig1, fig2,
                      os.path.join(workdir, "table_detach.csv"),
                      os.path.join(workdir, "report_snippets.md"))))
-    ok &= _check("logs 含 valid 与 invalid 两类 (两条分支都被走到)",
-                 df["valid"].any() and (~df["valid"]).any(),
-                 f"valid={int(df['valid'].sum())}/{len(df)}")
+    ok &= _check("logs 含 parse_ok 与不可解析两类 (两条分支都被走到)",
+                 df["parse_ok"].any() and (~df["parse_ok"]).any(),
+                 f"parse_ok={int(df['parse_ok'].sum())}/{len(df)}")
     return ok
 
 

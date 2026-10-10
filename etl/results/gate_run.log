@@ -1,0 +1,6 @@
+[gate] model=llama3.1:8b url=http://127.0.0.1:11434/v1/chat/completions n_per_family=20 (如为 5 即降采样, 如实记录, 不虚报 20/20)
+[stateful-calc] 0/20=0.0% vs 阈值5.0% → CLEAN
+[chain-sort] 0/20=0.0% vs 阈值125.0% → CLEAN
+[ret-path] 0/20=0.0% vs 阈值11.0% → CLEAN
+GATE: PASS — 可启动 run_etl
+EXIT=0

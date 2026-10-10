@@ -1,0 +1,17 @@
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+[run] arm=blind seed=42 steps=100000
+[run] arm=blind seed=43 steps=100000
+[run] arm=blind seed=44 steps=100000
+[run] arm=blind seed=45 steps=100000
+[run] arm=blind seed=46 steps=100000
+[run] arm=salient seed=42 steps=100000
+[run] arm=salient seed=43 steps=100000
+[run] arm=salient seed=44 steps=100000
+[run] arm=salient seed=45 steps=100000
+[run] arm=salient seed=46 steps=100000
+写入 q5/results/summary_q5.csv (10 行)
+prereg_synced=True: 预注册已锁定, 本结果可用于正式判读
+EXIT=0

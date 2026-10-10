@@ -1,0 +1,40 @@
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+[run] alpha=0.5 seed=42 steps=100000
+[run] alpha=0.5 seed=43 steps=100000
+[run] alpha=0.5 seed=44 steps=100000
+[run] alpha=0.5 seed=45 steps=100000
+[run] alpha=0.5 seed=46 steps=100000
+[run] alpha=1.0 seed=42 steps=100000
+[run] alpha=1.0 seed=43 steps=100000
+[run] alpha=1.0 seed=44 steps=100000
+[run] alpha=1.0 seed=45 steps=100000
+[run] alpha=1.0 seed=46 steps=100000
+[run] alpha=1.5 seed=42 steps=100000
+[run] alpha=1.5 seed=43 steps=100000
+[run] alpha=1.5 seed=44 steps=100000
+[run] alpha=1.5 seed=45 steps=100000
+[run] alpha=1.5 seed=46 steps=100000
+[run] alpha=2.0 seed=42 steps=100000
+[run] alpha=2.0 seed=43 steps=100000
+[run] alpha=2.0 seed=44 steps=100000
+[run] alpha=2.0 seed=45 steps=100000
+[run] alpha=2.0 seed=46 steps=100000
+[run] alpha=2.5 seed=42 steps=100000
+[run] alpha=2.5 seed=43 steps=100000
+[run] alpha=2.5 seed=44 steps=100000
+[run] alpha=2.5 seed=45 steps=100000
+[run] alpha=2.5 seed=46 steps=100000
+[run] alpha=3.0 seed=42 steps=100000
+[run] alpha=3.0 seed=43 steps=100000
+[run] alpha=3.0 seed=44 steps=100000
+[run] alpha=3.0 seed=45 steps=100000
+[run] alpha=3.0 seed=46 steps=100000
+写入 c2/results/summary.csv (30 行)
+summary.csv sha256 = 58b64fc881822af7a8ffb5033146c7a7e94505cf91e58c2322bad7b662192c31
+steps_alive: 全条件 27.1–500.0 (上限 500)
+  α=0.5 最小代理档: 均值 500.0
+提醒: prereg_synced=True, 本批结果可用于正式判读。
+EXIT=0

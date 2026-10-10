@@ -4,12 +4,26 @@
 # Python 运行产物
 __pycache__/
 *.pyc
-*.log
+
+# 根目录的 stdout 重定向 (运行日志, 非证据)。
+# 只逐条点名, 不用 *.log —— etl/results/gate_run.log 是门禁运行的
+# 实证记录, 属证据, 一旦被 *.log 静默扫掉就永远不入库。
+/c2_run.log
+/q5_run.log
 
 # 生成的结果 (可由 run_all.sh 重现)
-etl/results/
 c2/results/
 q5/results/
+
+# etl/results/ 只忽略可再生产物, gate_run.log 属一次性论证记录, 必须入库
+etl/results/*
+!etl/results/gate_run.log
+
+# ★ 例外: 门禁/训练的"一次性论证记录"不可再生成, 必须入库。
+#   run_all.sh 的第 4 类产物 (图/表/jsonl) 可再生, 可忽略;
+#   但 GATE PASS + per-family 阈值 + exit code 这种实证记录没了就无法重建。
+!c2_run.log
+!q5_run.log
 
 # ★ 隐藏真值不入库。schedules.pkl 一旦进 git 历史, 任何拿到仓库的
 #   人——以及 DSH 工作流里任何拿到仓库的 AI 代理——都能读到真值,

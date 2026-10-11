@@ -24,7 +24,7 @@
 - 证据指针（框架，不产数字）：
   - `goodhart-project/docs/internal_report_skeleton.md: L15-L17`（三裂缝分工：只处理前两条）
   - `goodhart-project/docs/agi_question_list.md: L6-L12`（Q1 代理/Q2·Q4 测量活跃队列；Q3 纯写作）
-  - `goodhart-project/prereg/citation_verification.csv`（13 条已填实、4 条留空；`zotero_key` 未核——正文引用一律标 [待核]，见 `docs/HANDOVER.md: L346-L361`）
+  - `goodhart-project/prereg/citation_verification.csv`（**17/17 已填实、0 留空**（2026-10-11 复核；此处原写"13 填实/4 留空"已过期）；`zotero_key` 17 行仍未核，见 `docs/HANDOVER.md` §13.4）
 
 ### §2 C.2 Goodhart 脱钩实验（≈1700 字；对应 skeleton §2）
 
@@ -82,4 +82,4 @@
 - 不写 H2（α* 稳定性）正面结论：α* 左删失于网格最左端（每个 seed 峰全在 α=0.5），方差 0 属退化（HANDOVER L635-L636）。
 - 不写 ETL 误差分解因果结论：未经预注册，一律 [exploratory]。
 - 不写 Q5「可察觉性不重要」一般结论：预注册禁令（preregistration_q5.md L51-L54；HANDOVER L666）。
-- 不写任何显著性断言超出 CI/配对差已报范围；引用一律 [待核] 直到 `prereg/citation_verification.csv` 四空 + zotero_key 结清。
+- 不写任何显著性断言超出 CI/配对差已报范围。**引用已解除 [待核] 限制**（2026-10-11：`citation_verification.csv` 17/17 填实并经 reference_checker + arXiv/Crossref 双源独立复核，14 found / 3 partial / 0 not_found；`paper/refs.bib` 17 条已转写入稿）。剩余约束只剩 `zotero_key` 未核，以及 §13.4 红线三条（Goodhart 原版页码、三裂缝无外部出处、Goodhart 缩略语实为 Strathern）。

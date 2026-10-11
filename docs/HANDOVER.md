@@ -323,27 +323,74 @@ mean_speed`。**即使装好 sb3 跑通训练，`analyze_c2.py` 也会直接因�
 预注册正文新增 §0「锁定说明」，把三条跑后不许改的口径（speed 定义、
 训练奖励≠报告量的偏离、`steps_alive` 饱和的预期性）写在锁定之前。
 
-### 13.4 引用台账：已核实 13 条、留空 4 条（原"17 个待填写的引用空位"，2026-10-07 已推进）
+### 13.4 引用台账：17/17 已核实（2026-10-11 修正本节标题）
 
 原文（本节初稿）记录：`prereg/citation_verification.csv` 的 17 行
 `cite_key/title/authors/year/venue/doi/zotero_key` **每一格都是 `[待填]`**，
 只有 `notes` 列写着"这里应该引什么"。即"17 个待填写的引用空位"。
 
-**已推进**（本轮）：新增 `verified_via` 列（`docs/citation_verification_spec.md`
+**已推进**（2026-10-07 轮）：新增 `verified_via` 列（`docs/citation_verification_spec.md`
+原本就要求此列），逐条联网检索后**填实 13 条**，`zotero_key` 全部保持 `[待填]`
+（无 Zotero 访问权，无法核验）。本节当时记作"13 填实 / 4 留空"，
+`PAPER_DRAFT/OUTLINE.md:27,85` 亦沿用该计数。
+
+**已推进（2026-10-11 轮，本节实际状态已变，勿再引 13/4）**：对 CSV 逐行重读，
+`verified=✅`、`verified_date=2026-10-08`、五列内容全部填实者为 **17 行**
+——即 2026-10-07 轮记为"留空"的那 4 行，其后已全部补齐（含
+`goodhart1975problems` 的 Palgrave 1984 重印本 DOI、以及三裂缝三行的
+Campbell/Strathern/Popper 真实出处）。`verified_via` 也逐行有 URL。
+**结论：13/4 是过期数字，当前是 17/17 填实、0 留空。** OUTLINE.md 的
+"4 空 + zotero_key 结清"红线相应失效，只剩 `zotero_key` 未核这一项。
+
+**2026-10-11 独立复核（不信 ✅ 标记，直接查权威源）**：
+- `reference_checker` 对 17 条全量比对 Crossref/OpenAlex/arXiv →
+  **14 found / 3 partial / 0 not_found**。
+- arXiv API `id_list=1606.06565` → "Concrete Problems in AI Safety"，
+  published 2016-06-21，六位作者姓名逐字一致。
+- Crossref `10.1002/(SICI)1234-981X(199707)5:3<305::AID-EURO184>3.0.CO;2-4`
+  → title / container / year / volume / issue / page / authors 全部逐字一致。
+- Crossref `10.1007/978-1-349-17295-5_4` → "Problems of Monetary Management:
+  The UK Experience"，1984，book-chapter，pp. 91–121，作者 C. A. E. Goodhart。
+- 3 条 partial 均为索引匹配到别的同名/相关文献（Strathern→《Partial
+  Connections》书评、Amodei→"AI Safety Gridworlds"、Popper→《Economica》
+  书评），不是被引文献本身错。逐条人工点开 DOI 后确认无误。
+
+**仍受的红线约束**（未随 17/17 改变）：
+- `zotero_key` 17 行全为 `[待填]`，`tools/reconcile_zotero.py` 未执行。
+- `goodhart1975problems` 引的是 **1984 Macmillan 重印本**（pp. 91–121），
+  原版 1975 会议论文页码未定位；流行缩略语 "When a measure becomes a
+  target..." 出自 **Strathern 1997**（转述 Hoskin 1996），**不是 Goodhart 原话**。
+- 三裂缝三行（Campbell/Strathern/Popper）引的是**底层定律**，不是三分法的
+  出处。**本项目自身的"三裂缝"框架外部无对应文献**：最接近的
+  Manheim & Garrabrant 2018《Categorizing Variants of Goodhart's Law》
+  (arXiv:1803.04585) 是**四类**（regressional / extremal / causal / adversarial），
+  与"三裂缝"不符。**不得把这三条当作三分法的来源引用。**
+- 年份口径：`year` 列取刊出年，预印本年写进 `venue`。三处受影响：
+  `ross2011reduction`（2011 vs 2010）、`sainz2024nlp`（2024 vs 2023）、
+  `morris2024levels`（2024 vs 2023）。
+
+**已落地**：`paper/refs.bib` 17 条 BibTeX 全部由本 CSV 转写，上述四条
+约束以注释形式写在 bib 文件头；`paper/main.tex` 的 "Open items" 节按
+17/17 重写，不再出现"13 filled / 4 empty"。
+
+**（以下为 2026-10-07 轮原文，保留作历史记录；其"13 填实 / 4 留空"计数已于
+2026-10-11 轮被上文修正为 17/17，请勿再引用 13/4。）**
+
+**已推进**（2026-10-07 轮）：新增 `verified_via` 列（`docs/citation_verification_spec.md`
 原本就要求此列），逐条联网检索后**填实 13 条**，`zotero_key` 全部保持 `[待填]`
 （无 Zotero 访问权，无法核验）。
 
-**4 行刻意留空**（留空是合格交付，编造不是）：
-- 第 1 行「Goodhart 原始表述」：能核到的可引版本是 Palgrave 1984 重印本
-  （DOI 10.1007/978-1-349-17295-5_4），但该行注记明确要求"定位到具体页码"，
-  而页码未能核到、年份（1984）与原始年份（1975）也不一致 → 留空待人工处理。
-- 第 2–4 行「三裂缝（测量/代理/不可证伪）的出处」：**这是本项目自身的框架**
-  （见本文件 §2），外部未有对应三分法文献。最接近的 Manheim & Garrabrant 2018
-  《Categorizing Variants of Goodhart's Law》(arXiv:1803.04585) 是**四类**
-  （regressional / extremal / causal / adversarial），与"三裂缝"不符 → 留空。
-  **这三条可能是"自创框架被当成有出处"的风险点，值得复核。**
+**4 行刻意留空**（2026-10-07 轮状态；2026-10-11 轮已全部补齐）：
+- 第 1 行「Goodhart 原始表述」：2026-10-08 已核到 Palgrave 1984 重印本
+  （DOI 10.1007/978-1-349-17295-5_4）。但该行注记要求的"定位到具体页码"
+  仍未满足（只核到重印本 pp. 91–121，原版 1975 页码未定位），
+  且年份（1984）与原始年份（1975）不一致 → **此条部分未结，见上文红线第 2 条**。
+- 第 2–4 行「三裂缝（测量/代理/不可证伪）的出处」：2026-10-08 已填实为
+  Campbell 1979 / Strathern 1997 / Popper 1963 三条真实文献。但**这三条引的是
+  底层定律，本项目自身的"三裂缝"框架外部无对应文献**（Manheim & Garrabrant
+  2018 是四类，不符）→ **此条仍受约束，见上文红线第 3 条**。
 
-**独立复核（不信标记，直接查权威源）**：用 arXiv API（`export.arxiv.org/api/query`）
+**独立复核（2026-10-07 轮，13 条）**：用 arXiv API（`export.arxiv.org/api/query`）
 与 Crossref API（`api.crossref.org/works/{doi}`）对 13 条逐条回拉权威元数据并比对
 标题/年份。**复核脚本是一次性脚本，未入库**（若日后要常态化复核，应放进 `tools/`
 并纳入测试）。结果：
@@ -357,10 +404,11 @@ mean_speed`。**即使装好 sb3 跑通训练，`analyze_c2.py` 也会直接因�
   （2024 vs 2023）。`year` 列按引用惯例取**刊出年**，预印本年已写进 `venue` 列，
   以免日后被当成错误引用。
 
-**仍受的红线约束**：§5 的"核验完成前不得进入正式写作参考文献"仍然有效 ——
-`zotero_key` 未核、Goodhart 页码未定、三裂缝无出处，这三项未结。
-`docs/citation_verification_spec.md` 规定的完整流程尚未跑完（`tools/reconcile_zotero.py`
-未执行）。
+**仍受的红线约束（2026-10-07 轮原文，2026-10-11 轮状态见上文）**：
+§5 的"核验完成前不得进入正式写作参考文献"已于 2026-10-11 轮解除——
+`paper/refs.bib` 17 条已转写入稿。剩余未结项为：`zotero_key` 未核、
+Goodhart 原版页码未定、三裂缝无外部出处
+（`tools/reconcile_zotero.py` 未执行）。
 
 ### 13.5 目录树（§1）漏列 / 错位
 

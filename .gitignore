@@ -29,3 +29,9 @@ etl/results/*
 #   人——以及 DSH 工作流里任何拿到仓库的 AI 代理——都能读到真值,
 #   门禁防的是 prompt 拼接, 防不了读文件。真值只留 SHA256 锚点。
 etl/data/schedules/*.pkl
+
+# LaTeX 构建中间产物 (paper/ 的 .tex/.pdf/.bbl 是交付物, 保留)
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.blg

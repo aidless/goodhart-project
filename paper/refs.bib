@@ -1,0 +1,220 @@
+% Bibliography for goodhart-project/paper/main.tex
+%
+% Provenance: every entry is transcribed from goodhart-project/prereg/citation_verification.csv
+% (17 rows, all marked verified=✅, verified_date 2026-10-07/08), then independently
+% re-checked on 2026-10-11 against arXiv API / Crossref / OpenAlex by reference_checker
+% (14 found, 3 partial, 0 not_found) plus two direct lookups:
+%   - arXiv id_list=1606.06565  -> title/authors/published 2016-06-21 confirmed verbatim
+%   - Crossref 10.1002/(SICI)1234-981X(199707)5:3<305::AID-EURO184>3.0.CO;2-4
+%     -> title/container/year/volume/issue/page/authors confirmed verbatim
+%
+% KNOWN RESIDUAL DEFECTS (must be disclosed, not silently fixed):
+%   (a) zotero_key column is [待填] for all 17 rows (no Zotero access) - tools/reconcile_zotero.py not run.
+%   (b) goodhart1975problems is cited as the 1984 Macmillan reprint chapter
+%       (DOI 10.1007/978-1-349-17295-5_4, pp. 91-121). The original 1975 conference
+%       paper's exact page numbers could not be located. Year is 1984, not 1975.
+%       The popular short form "When a measure becomes a target..." is Strathern 1997
+%       (paraphrasing Hoskin 1996), NOT Goodhart.
+%   (c) Three "three-gap" entries (campbell1979assessing, strathern1997improving,
+%       popper1963conjectures) are cited for the measurement/agency/falsifiability
+%       laws. The project's own "three cracks" taxonomy has NO external counterpart:
+%       the closest work (Manheim & Garrabrant 2018, arXiv:1803.04585) uses FOUR
+%       categories (regressional/extremal/causal/adversarial) and does not match.
+%       These are therefore citable as the underlying laws but NOT as the source
+%       of a three-way split.
+%   (d) Year-column convention: `year` holds the publication year; the preprint year
+%       (when different) is recorded in `venue`. Three entries are affected:
+%       ross2011reduction (2011 AISTATS vs 2010 preprint), sainz2024nlp
+%       (2024 Findings vs 2023 preprint), morris2024levels (2024 ICML vs 2023 preprint).
+
+@incollection{goodhart1975problems,
+  author    = {Goodhart, C. A. E.},
+  title     = {Problems of Monetary Management: The {UK} Experience},
+  booktitle = {Monetary Theory and Practice},
+  year      = {1984},
+  pages     = {91--121},
+  publisher = {Macmillan},
+  note      = {Reprint of 1975 conference paper, Reserve Bank of Australia;
+               original 1975 pagination not located. DOI 10.1007/978-1-349-17295-5\_4}
+}
+
+@article{campbell1979assessing,
+  author  = {Campbell, Donald T.},
+  title   = {Assessing the Impact of Planned Social Change},
+  journal = {Evaluation and Program Planning},
+  year    = {1979},
+  volume  = {2},
+  number  = {1},
+  pages   = {67--90},
+  doi     = {10.1016/0149-7189(79)90048-X}
+}
+
+@article{strathern1997improving,
+  author  = {Strathern, Marilyn},
+  title   = {'Improving ratings': audit in the {British} University system},
+  journal = {European Review},
+  year    = {1997},
+  volume  = {5},
+  number  = {3},
+  pages   = {305--321},
+  doi     = {10.1002/(SICI)1234-981X(199707)5:3<305::AID-EURO184>3.0.CO;2-4}
+}
+
+@book{popper1963conjectures,
+  author    = {Popper, Karl R.},
+  title     = {Conjectures and Refutations: The Growth of Scientific Knowledge},
+  publisher = {Routledge},
+  address   = {London},
+  year      = {1963}
+}
+
+@misc{amodei2016concrete,
+  author = {Amodei, Dario and Olah, Chris and Steinhardt, Jacob and Christiano, Paul and
+            Schulman, John and Man{\'e}, Dan},
+  title  = {Concrete Problems in {AI} Safety},
+  year   = {2016},
+  eprint = {1606.06565},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI},
+  doi = {10.48550/arXiv.1606.06565}
+}
+
+@inproceedings{pan2022effects,
+  author    = {Pan, Alexander and Bhatia, Kshitij and Steinhardt, Jacob},
+  title     = {The Effects of Reward Misspecification: Mapping and Mitigating Misaligned Models},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2022},
+  eprint    = {2201.03544},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG},
+  doi = {10.48550/arXiv.2201.03544}
+}
+
+@inproceedings{wei2022chain,
+  author    = {Wei, Jason and Wang, Xuezhi and Schuurmans, Dale and Bosma, Maarten and
+               Ichter, Brian and Xia, Fei and Chi, Ed and Le, Quoc V. and Zhou, Denny},
+  title     = {Chain-of-Thought Prompting Elicits Reasoning in Large Language Models},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {35},
+  pages     = {24824--24837},
+  year      = {2022},
+  eprint    = {2201.11903},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL}
+}
+
+@inproceedings{ross2011reduction,
+  author    = {Ross, St{\'e}phane and Gordon, Geoffrey J. and Bagnell, J. Andrew},
+  title     = {A Reduction of Imitation Learning and Structured Prediction
+               to No-Regret Online Learning},
+  booktitle = {International Conference on Artificial Intelligence and Statistics (AISTATS)},
+  year      = {2011},
+  note      = {Preprint 2010, arXiv:1011.0686}
+}
+
+@inproceedings{kwa2025measuring,
+  author    = {Kwa, Thomas and West, Ben and Becker, Joel and Deng, Amy and
+               Garcia, Katharyn and Hasin, Max and Jawhar, Sami and Kinniment, Megan and
+               Rush, Nate and Von Arx, Sydney and Bloom, Ryan and Broadley, Thomas},
+  title     = {Measuring {AI} Ability to Complete Long Software Tasks},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {38},
+  pages     = {102382--102435},
+  year      = {2025},
+  note      = {arXiv:2503.14499}
+}
+
+@misc{schulman2017proximal,
+  author = {Schulman, John and Wolski, Filip and Dhariwal, Prafulla and Radford, Alec and
+            Klimov, Oleg},
+  title  = {Proximal Policy Optimization Algorithms},
+  year   = {2017},
+  eprint = {1707.06347},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+@article{raffin2021stable,
+  author  = {Raffin, Antonin and Hill, Ashley and Gleave, Adam and Kanervisto, Anssi and
+             Ernestus, Maximilian and Dormann, Noah},
+  title   = {{Stable-Baselines3}: Reliable Reinforcement Learning Implementations},
+  journal = {Journal of Machine Learning Research},
+  year    = {2021},
+  volume  = {22},
+  number  = {268},
+  pages   = {1--8}
+}
+
+@article{barto1983neuronlike,
+  author  = {Barto, Andrew G. and Sutton, Richard S. and Anderson, Charles W.},
+  title   = {Neuronlike Adaptive Elements That Can Solve Difficult Learning Control Problems},
+  journal = {IEEE Transactions on Systems, Man, and Cybernetics},
+  year    = {1983},
+  volume  = {SMC-13},
+  number  = {5},
+  pages   = {834--846},
+  doi     = {10.1109/TSMC.1983.6313077}
+}
+
+@article{nosek2018preregistration,
+  author  = {Nosek, Brian A. and Ebersole, Charles R. and DeHaven, Alexander C. and
+             Mellor, David T.},
+  title   = {The Preregistration Revolution},
+  journal = {Proceedings of the National Academy of Sciences},
+  year    = {2018},
+  volume  = {115},
+  number  = {11},
+  pages   = {2600--2606},
+  doi     = {10.1073/pnas.1708274114}
+}
+
+@article{pineau2021improving,
+  author  = {Pineau, Joelle and Vincent-Lamarre, Philippe and Sinha, Koustuv and
+             Larivi{\`e}re, Vincent and Beygelzimer, Alina and d'Alch{\'e}-Buc, Florence and
+             Fox, Emily B. and Larochelle, Hugo},
+  title   = {Improving Reproducibility in Machine Learning Research
+             (A Report from the {NeurIPS} 2019 Reproducibility Program)},
+  journal = {Journal of Machine Learning Research},
+  year    = {2021},
+  volume  = {22},
+  number  = {164},
+  pages   = {1--20},
+  note    = {Preprint 2020, arXiv:2003.12206}
+}
+
+@inproceedings{sainz2024nlp,
+  author    = {Sainz, Oscar and Campos, Jon Ander and Garc{\'i}a-Ferrero, Iker and
+               Etxaniz, Julen and Lopez de Lacalle, Oier and Agirre, Eneko},
+  title     = {{NLP} Evaluation in Trouble: On the Need to Measure {LLM} Data
+               Contamination for Each Benchmark},
+  booktitle = {Findings of the Association for Computational Linguistics: EMNLP 2024},
+  year      = {2024},
+  eprint    = {2310.18018},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL},
+  note      = {Preprint 2023}
+}
+
+@misc{ji2023alignment,
+  author = {Ji, Jiaming and Qiu, Tianyi and Chen, Boyuan and Zhang, Borong and
+            Lou, Hantao and Wang, Kaile and Duan, Yike and He, Zhonghao and
+            Lukaszewicz, Victoria and Hu, Donghai and Zhou, Jiayi and Zhang, Yaodong},
+  title  = {{AI} Alignment: A Comprehensive Survey},
+  year   = {2023},
+  eprint = {2310.19852},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI}
+}
+
+@inproceedings{morris2024levels,
+  author    = {Morris, Meredith Ringel and Sohl-Dickstein, Jascha and Fiedel, Noah and
+               Warkentin, Thomas and Dafoe, Allan and Faust, Aleksandra and
+               Farabet, Camille and Legg, Shane},
+  title     = {Levels of {AGI} for Operationalizing Progress on the Path to {AGI}},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  year      = {2024},
+  eprint    = {2311.02462},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI},
+  note      = {Preprint 2023}
+}

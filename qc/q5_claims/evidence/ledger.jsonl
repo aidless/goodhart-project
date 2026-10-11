@@ -1,0 +1,2 @@
+{"artifact": "q5_true_paired.csv", "sha256": "95774a06849c2a39745e0e0a8902e529c72f299ae83a299865bbb900936ef81d", "produced_by": "qc/q5_claims/build_claims.py", "seed": 0, "claim_id": "Q5-H1-TRUE-SCORE"}
+{"artifact": "q5_speeddev_paired.csv", "sha256": "83aaf9ef8383800bd2618ffdc422b21997074a1e875d1502f019ef71555842e3", "produced_by": "qc/q5_claims/build_claims.py", "seed": 1, "claim_id": "Q5-H2-SPEED-DEVIATION"}

@@ -1,0 +1,88 @@
+[
+  {
+    "id": "Q5-H1-TRUE-SCORE",
+    "analysis": {
+      "method": "paired-diff",
+      "data": "q5_true_paired.csv",
+      "experiment": "q5-salience",
+      "alpha": 0.05,
+      "fields": [
+        "salient",
+        "blind"
+      ]
+    },
+    "evidence": [
+      "q5_true_paired.csv"
+    ],
+    "statement": "H1 (预注册 §3): salient - blind 的 true_score 配对差必须 > 0 且 95% bootstrap CI 不含 0。实测 mean=-0.000352, 方向与预注册预测相反, CI [-0.003940, +0.003164] 含 0, p=0.8698 不显著 → H1 未确认, 数据与 H0 (两组无差异) 一致。两组 steps_alive 均饱和于 500, 信号全部来自罚分项。",
+    "numbers": {
+      "experiment": "q5-salience",
+      "n": 5,
+      "mean_a": 499.99221460000007,
+      "mean_b": 499.99256679999996,
+      "diff": -0.0003522000000089065,
+      "d": -0.07813154417396509,
+      "pos": 2,
+      "pos_share": 0.4,
+      "t": -0.17470744396001361,
+      "p": 0.869796004902631,
+      "ci_low": -0.003940400000010414,
+      "ci_high": 0.003163599999993494,
+      "holm_significant": false
+    }
+  },
+  {
+    "id": "Q5-H2-SPEED-DEVIATION",
+    "analysis": {
+      "method": "paired-diff",
+      "data": "q5_speeddev_paired.csv",
+      "experiment": "q5-salience",
+      "alpha": 0.05,
+      "fields": [
+        "salient",
+        "blind"
+      ]
+    },
+    "evidence": [
+      "q5_speeddev_paired.csv"
+    ],
+    "statement": "H2 (预注册 §3): |mean_speed - limit| 配对差, 方向为 salient 更小。实测 mean=-0.001264, CI [-0.001595, -0.000874] 不含 0, p=0.0041 → 冻结判据形式上'确认'。但效应量仅为两组共同偏差 (约 0.2689) 的 0.47%, 且两组同为过度保守 (mean_speed 仅为限速的 28.5%/28.8%), 非 H2 假设的'压线 vs 冲速'之别 → 形式满足、实质不成立 (如实双记)。",
+    "numbers": {
+      "experiment": "q5-salience",
+      "n": 5,
+      "mean_a": 0.2675842,
+      "mean_b": 0.2688482,
+      "diff": -0.0012640000000000095,
+      "d": -2.6433827193852464,
+      "pos": 0,
+      "pos_share": 0.0,
+      "t": -5.910783451093661,
+      "p": 0.004101402100737611,
+      "ci_low": -0.001595000000000013,
+      "ci_high": -0.0008742000000000027,
+      "holm_significant": true
+    }
+  },
+  {
+    "id": "Q5-H1-DIRECTION-KILL",
+    "analysis": {
+      "method": "kill-switch",
+      "data": "q5_true_paired.csv",
+      "experiment": "q5-salience",
+      "fields": [
+        "salient",
+        "blind"
+      ]
+    },
+    "evidence": [
+      "q5_true_paired.csv"
+    ],
+    "statement": "预注册方向性杀开关: H1 预测 salient - blind > 0。实测 diff<0, 方向与预注册预测相反 → 该方向性预测被否证 (STOP-PREREG-DIRECTION-REFUTED)。注意: 这是方向否证, 不是'惩罚可察觉性不重要'的一般结论 (预注册 §3 只允许归因 (a)/(b))。",
+    "numbers": {
+      "experiment": "q5-salience",
+      "n": 5,
+      "diff": -0.0003522000000089065,
+      "verdict": "STOP-PREREG-DIRECTION-REFUTED"
+    }
+  }
+]

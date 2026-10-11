@@ -1,0 +1,92 @@
+{
+  "verdicts": [
+    {
+      "id": "Q5-H1-TRUE-SCORE",
+      "verdict": "pass",
+      "reasons": [],
+      "missing": [],
+      "mismatched": [],
+      "recomputed": {
+        "n": 5,
+        "mean_a": 499.9922146,
+        "mean_b": 499.99256679999996,
+        "diff": -0.0003522000000089065,
+        "sd_diff": 0.004507782403797239,
+        "d": -0.07813154417396509,
+        "t_paired": -0.17470744396001361,
+        "welch_t": -0.18644147647978357,
+        "pos": 2,
+        "neg": 3,
+        "tie": 0,
+        "pos_share": 0.4
+      }
+    },
+    {
+      "id": "Q5-H2-SPEED-DEVIATION",
+      "verdict": "pass",
+      "reasons": [],
+      "missing": [],
+      "mismatched": [],
+      "recomputed": {
+        "n": 5,
+        "mean_a": 0.2675842,
+        "mean_b": 0.2688482,
+        "diff": -0.0012640000000000095,
+        "sd_diff": 0.00047817517710563285,
+        "d": -2.6433827193852464,
+        "t_paired": -5.910783451093661,
+        "welch_t": -6.861384504693888,
+        "pos": 0,
+        "neg": 5,
+        "tie": 0,
+        "pos_share": 0.0
+      }
+    },
+    {
+      "id": "Q5-H1-DIRECTION-KILL",
+      "verdict": "pass",
+      "reasons": [],
+      "missing": [],
+      "mismatched": [],
+      "recomputed": {
+        "n": 5,
+        "mean_a": 499.9922146,
+        "mean_b": 499.99256679999996,
+        "diff": -0.0003522000000089065,
+        "sd_diff": 0.004507782403797239,
+        "d": -0.07813154417396509,
+        "t_paired": -0.17470744396001361,
+        "welch_t": -0.18644147647978357,
+        "pos": 2,
+        "neg": 3,
+        "tie": 0,
+        "pos_share": 0.4
+      }
+    }
+  ],
+  "holm_table": [
+    {
+      "claim_idx": 1,
+      "p": 0.004101402100737611,
+      "holm_thresh": 0.025,
+      "reject": true
+    },
+    {
+      "claim_idx": 0,
+      "p": 0.869796004902631,
+      "holm_thresh": 0.05,
+      "reject": false
+    }
+  ],
+  "ledger_errors": [],
+  "group_n": {
+    "q5-salience": [
+      5
+    ]
+  },
+  "group_asof": {},
+  "detector_blind": [],
+  "mismatch_kind_counts": {},
+  "src_lock": null,
+  "src_network": false
+}

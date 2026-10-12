@@ -782,3 +782,39 @@ table_detach + report_snippets）。
   （2026-10-08）。**解冻 = 允许立项设计，不等于自动开工**；Q6 需全新
   任务设计，为防"第二个计划过载"，设计另立项、不并入现有线。
 
+
+### 13.14 2026-10-12 收尾：B 线重跑诊断、环境阻断登记、指针扫尾（glm 会话）
+
+**本节行号即 2026-10-12 状态**；下游文档指针已全部改为「§13.x + 实测行号」双锚
+（OUTLINE/CLAIM_LEDGER 16 处，提交 3fae710）。
+
+1. **B 线「换更强模型重跑」的诊断（KI-002，先于任何重跑）**：首批地板
+   （correct 5/614）**不是模型能力问题，是任务设计属性**——
+   `src/gen_tasks.py:110-112` 公开白名单只有 `(task_id, family, n_steps, x0,
+   init_seq, entries)`，`ops`/`sort_rule`/`ptr`/`values` 全部隐藏（2026-10-08
+   卫生修复连同 sort_rule 一起移出，见 §13.10(a)），`build_prompt` 只拼公开
+   字段 → **三族真值无一可由公开信息推导**。`logs.jsonl` 的 raw 显示模型在
+   猜（ret-path 答条目名而非值）。换 llama3.1:8b 之外任何模型重跑都会得到
+   同样的地板，除非先改设计。双臂对照实验（规则隐藏 vs 公开）脚本已就绪：
+   `qc/b_line_solvability/mini_experiment.py`（每族前 6 任务 × k∈{0,2}，
+   生产 `validator.check_step` 判分，raw 逐字落盘；**env 必须先于 import
+   `ollama_model` 设 `OLLAMA_MODEL`**，用法见模块 docstring）。
+2. **环境阻断（KI-003）**：2026-10-12 16:20 起本机任何模型加载 ~5s 内被杀
+   （`llama-server process has terminated: signal: killed`；qwen3:8b /
+   qwen2.5:7b / qwen3:4b / llama3.2:3b / qwen2.5:3b / qwen3:0.6b 全部复现，
+   :11434 与临时 CPU 实例 :11435 均中招）。根因**不是 OOM**：
+   `/tmp/opencode/ollama_watchdog.sh`（2026-10-12 03:10 由另一会话启动）每
+   5s `kill -9` 全部 `llama-server`，保护其训练进程 `pid 3811520`
+   （`.agent-memory/aie/scripts/deeped3.py`，占 GPU 3434/6144 MiB）。本项目
+   **不得**杀 watchdog 或训练进程。迷你实验等训练结束或用户暂停 watchdog
+   后执行。
+3. **其他收尾（4 提交）**：`tools/reconcile_zotero.py` 哑炮修复（`[待填]`
+   占位符当真值 → 回填恒为 0；改 `_is_blank` 判空 + `zotero_key` 回填 +
+   `--dry-run`，fixture 实测，提交 431754e）；OUTLINE/CLAIM_LEDGER 16 处
+   HANDOVER 行号指针刷新为 §13.x 双锚（3fae710）；.bak×2 入库保全（aa6a418）。
+   引用台账 17/17 已核（zotero_key 仍全 [待填]，本机无 Zotero，
+   `reconcile_zotero.py` 已修好待用）。
+4. **下一步（二选一，均等外部条件）**：(a) watchdog 解除后跑 KI-002 双臂
+   实验 → 按结果拍板修复方向（prompt 携带规则 / 按族选择性公开）→ 门禁
+   全量重跑 → 换模型重跑 ETL；(b) 论文线：venue 已建议 workshop 首投
+   （`PAPER_DRAFT/OUTLINE.md` §Venue），正刊等 Q2/Q4 可分析后。

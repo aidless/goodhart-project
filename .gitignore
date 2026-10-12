@@ -23,6 +23,7 @@ etl/results/*
 !etl/results/gate_run_v3_public_rules.log
 !etl/results/gate_run_v3_public_rules_raw.log
 !etl/results/gate_run_v31_public_rules.log
+!etl/results/logs_chainsort_qwen7b.jsonl
 # 批次快照归档: 每个 ETL 批次的不可变证据 (logs/图/表/运行日志),
 # 覆写防护 —— 当前工作副本 logs.jsonl 可被重跑覆盖, 归档目录不可。
 !etl/results/archive_*/

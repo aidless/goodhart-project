@@ -962,3 +962,22 @@ table_detach + report_snippets）。
    > etl/results/logs.jsonl` → 对复测产物单跑 analyze（指定该文件，勿覆盖
    table_detach.csv）。教训：后台实验的输出路径必须显式传参，不许依赖
    默认值与环境变量猜测。
+
+### 13.20 2026-10-12 夜：chain-sort 强模型复测完成——「换强模型」腿否证，logs 恢复执行
+
+1. **复测结果（qwen2.5:7b, CPU :11435, 公开规则, 30 任务 / 197 步）**：
+   step_acc **0.0863** (17/197)，整任务全对 1/30，first_err_median 0.0，
+   cumulative 144/180 = 80%，audit 重放 mismatch=0 PASS。对照批次 2
+   同族 qwen2.5:3b 的 0.1168：**参数翻倍不升反降**。
+2. **判读**：KI-002 的「chain-sort 需强模型+改设计双条件」中，强模型腿
+   **否证**（同族 7B ≤ 3B，且两者都远离任何"规则执行"水平）；chain-sort
+   地板不是容量问题，是任务的状态可观测性/逐步反馈设计问题。剩余修复
+   路径只剩**改设计**。known_issues KI-002 已补记。
+3. **logs 恢复（§13.19 恢复计划已执行）**：复测产物 30 行 →
+   `etl/results/logs_chainsort_qwen7b.jsonl`（raw 逐字，.gitignore 白名单
+   已加）；批次 2 原始 logs 从 git d77237d 恢复回 `etl/results/logs.jsonl`，
+   SHA256 与归档逐字节一致（44c8280d…）。
+4. **清理**：:11435 llama-server 已停（端口关闭），GPU 无本会话进程。
+5. **本轮四件全收口**：② 论文 v2（c233494）③ Q3 v2 ④ arXiv 源包+
+   research_audit PASS ① 复测完成并登记（本节）。未做：chain-sort 改设计
+   （新任务设计，属 Q4 扩样本之后的独立决策）；arXiv 实际提交（等用户）。

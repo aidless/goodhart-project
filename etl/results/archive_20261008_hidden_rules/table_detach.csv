@@ -1,0 +1,4 @@
+model,family,step_acc,parse_ok,first_err_median
+llama3.1:8b,chain-sort,0.0,0.0,0.0
+llama3.1:8b,ret-path,0.0,0.0,0.0
+llama3.1:8b,stateful-calc,0.0235,0.0235,0.0

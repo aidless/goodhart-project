@@ -875,3 +875,30 @@ table_detach + report_snippets）。
    `etl/results/logs.jsonl`。结果判读见下节（跑完后补）。
    环境纪律：系统 :11434 被另一会话使用（不碰）；:11435 实验后即杀；
    训练进程（pid 3811520）全程未受影响。
+
+### 13.17 2026-10-12 晚：全量 ETL 重跑完成（规则公开版）——地板解除，cumulative 主导
+
+1. **运行与审计**：qwen2.5:3b @ :11435 CPU，90 任务 614 步，etl_exit=0；
+   `audit_replay` 614 步 **mismatch=0 PASS**（判分可复现）。
+2. **结果**（脚本产出，见 `etl/results/archive_20261012_public_rules/`）：
+   step_acc：ret-path **0.1912**、stateful-calc **0.1174**、chain-sort
+   **0.1168**（旧批 llama3.1:8b 隐藏规则版：0 / 0.0235 / 0）——KI-002
+   地板解除。stateful first_err_median 0→1（部分任务能过第 0 步了）。
+3. **逐 k 形态**：ret-path 11/30 (k=0) → 0/12 (k=7) 单调衰减；
+   stateful 19/30 (k=0) → k≥4 全 0；chain-sort 各 k 2–5/30 低位平铺。
+   → Q4（短链误差模式外推长链可靠性）**有曲线可拟合，可分析**。
+4. **误差分解 [exploratory]**：cumulative 占比 stateful 82%、chain-sort
+   76%、ret-path 69%（single 34/41/51）——带病继续是主导模式。
+   **错后恢复转移 46/614**（ret-path 27、chain-sort 15、stateful 4）：
+   ret-path 恢复最多，与"规则公开→模型可从 prompt 重锚定"假说相容，
+   → Q2（作弊恢复/重锚定触发条件）**有现象学可分析**。
+5. **诚实标注**：① 单模型单跑（n=90），全部点估计，报告引用一律
+   [exploratory]；② chain-sort 0.1168 与迷你实验 P 臂 0/12 不一致——
+   全批任务更多、k 覆盖更宽，11.7% 属"低位有增益"，"3B 不能执行交换
+   规则"假说需强模型复测才能归因，不得据此推翻；③ 新批数字入报告前
+   须重跑 `analyze_etl.py`（勿手抄本节数字）。
+6. **证据入库**：`.gitignore` 增设 `archive_*/` 白名单；两批快照入库
+   （20261008 隐藏规则版 = KI-002 基线；20261012 规则公开版 = 修复后）。
+   运行日志 `etl_run_v2_public_rules.log` 随归档。
+7. **待办**：强模型复测 chain-sort（等训练 GPU 空出）；报告 3.3/3.4 节
+   换新批数字并标 [exploratory]；:11435 实验后即杀（本节提交后执行）。

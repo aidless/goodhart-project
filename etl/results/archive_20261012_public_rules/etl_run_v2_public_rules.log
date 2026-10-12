@@ -1,0 +1,3 @@
+[etl] 全量: 90 任务
+etl_exit=0
+90 etl/results/logs.jsonl

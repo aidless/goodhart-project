@@ -103,13 +103,15 @@ def main(n_per_family=30, seed=0,
             s["truth_chain"] = _truth_chain(s)
             schedules[tid] = s
 
-            # 公开任务: 只含公开字段, 绝不含 truth_chain。
-            # sort_rule 与 ops 一样是**隐藏规则**, 不进公开文件:
-            # 否则拿到 tasks.jsonl 就能直接算出每个 k 的真值, 泄露答案键。
-            # (run_etl.build_prompt 本来就不读 sort_rule, 去掉它不影响跑批)
+            # 公开任务 (v2, 2026-10-12 设计变更): 规则字段 (ops/sort_rule/
+            # ptr/values) 随任务公开 —— KI-002 迷你实验证实规则隐藏时三族真值
+            # 不可推导, 地板是设计属性 (qc/b_line_solvability/results.json)。
+            # 规则 ≠ 答案键: 公开规则后仍须逐步执行才能得到真值。
+            # truth_chain 仍然绝不进 tasks, 只在 schedules (validator 侧)。
             public = {k: v for k, v in s.items()
-                      if k in ("task_id", "family", "n_steps",
-                               "x0", "init_seq", "entries")}
+                      if k in ("task_id", "family", "n_steps", "x0",
+                               "init_seq", "entries", "sort_rule",
+                               "ops", "ptr", "values")}
             public["task_id"] = tid
             tasks.append(public)
 

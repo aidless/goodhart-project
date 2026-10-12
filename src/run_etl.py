@@ -7,19 +7,40 @@ def load_tasks(path="etl/data/tasks/tasks.jsonl"):
     with open(path) as f:
         return [json.loads(line) for line in f if line.strip()]
 
+OP_DESC = {
+    "add3": "x ← x + 3",
+    "mul2": "x ← x × 2",
+    "sub1": "x ← x − 1",
+    "add7": "x ← x + 7",
+    "mul3": "x ← x × 3",
+    "xor5": "x ← x 与 5 按位异或",
+}
+
 def build_prompt(task, k):
-    """只含公开信息 + 第 k 步提问。绝不泄露真值链。"""
+    """公开规则 + 第 k 步提问 (v2 设计, 2026-10-12 KI-002 定案)。
+
+    规则 (ops/sort_rule/ptr/values) 随任务公开; truth_chain 仍绝不出现在
+    prompt。规则 ≠ 答案键: 拿到规则仍须逐步执行才能得到真值。
+    """
     fam = task["family"]
     if fam == "stateful-calc":
-        return (f"从 x0={task['x0']} 开始，按隐藏的整数规则链逐步推进。"
+        rules = "; ".join(f"第{i+1}步 {OP_DESC[op]}"
+                          for i, op in enumerate(task["ops"]))
+        return (f"从 x0={task['x0']} 开始。整数规则链（公开）：{rules}。"
                 f"请直接给出第 {k+1} 步的结果（只输出一个整数）。")
     elif fam == "chain-sort":
-        return (f"初始序列 {task['init_seq']}。按隐藏规则操作 {k+1} 次后，"
-                f"请直接给出序列（用逗号分隔，只输出序列）。")
+        return (f"初始序列 {task['init_seq']}。变换规则（公开）：每一步先把"
+                f"序列循环右移一位，再比较前两个元素：asc 规则下前者大于后者"
+                f"则交换，desc 规则下前者小于后者则交换。"
+                f"本任务规则 = {task['sort_rule']}。"
+                f"请直接给出操作 {k+1} 次后的序列（用逗号分隔，只输出序列）。")
     elif fam == "ret-path":
-        return (f"从条目 '{task['entries'][0]}' 出发，沿隐藏的指针关系走 {k+1} 跳，"
+        pairs = ", ".join(f"e{i}→e{p}" for i, p in enumerate(task["ptr"]))
+        vals = ", ".join(f"e{i}={v}" for i, v in enumerate(task["values"]))
+        return (f"指针映射（公开）：{pairs}。各条目关键值（公开）：{vals}。"
+                f"从条目 '{task['entries'][0]}' 出发沿指针走 {k+1} 跳，"
                 f"请直接给出到达条目的关键值（只输出该值）。")
-    return ""
+    raise ValueError(f"未知任务族: {fam}")
 
 def run(model_call, out_path="etl/results/logs.jsonl", tasks_per_family=None):
     tasks = load_tasks()

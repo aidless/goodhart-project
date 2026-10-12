@@ -45,3 +45,6 @@ paper/*.aux
 paper/*.log
 paper/*.out
 paper/*.blg
+!etl/results/logs_chainsort_v2_showstate_qwen3b.jsonl
+!etl/results/logs_chainsort_v2_showstate_qwen7b.jsonl
+!etl/results/etl_v2_showstate_qwen7b_run.log

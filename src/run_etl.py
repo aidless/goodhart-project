@@ -2,6 +2,17 @@
 import json
 import os
 from validators import Validator, classify_error
+from gen_tasks import apply_chain_sort
+
+def chain_sort_state(init_seq, k, rule):
+    """公开规则折叠 k 步得到当前序列 (k=0 → init_seq)。
+
+    只用公开字段重算, 不读 schedules/truth_chain (单向流保持, 见
+    docs/design_chainsort_v2.md §2)。"""
+    seq = list(init_seq)
+    for _ in range(k):
+        seq = apply_chain_sort(seq, 0, rule)
+    return seq
 
 def load_tasks(path="etl/data/tasks/tasks.jsonl"):
     with open(path) as f:
@@ -16,11 +27,14 @@ OP_DESC = {
     "xor5": "x ← x 与 5 按位异或",
 }
 
-def build_prompt(task, k):
+def build_prompt(task, k, show_state=False):
     """公开规则 + 第 k 步提问 (v2 设计, 2026-10-12 KI-002 定案)。
 
     规则 (ops/sort_rule/ptr/values) 随任务公开; truth_chain 仍绝不出现在
     prompt。规则 ≠ 答案键: 拿到规则仍须逐步执行才能得到真值。
+
+    show_state=True (chain-sort v2 臂, 状态可见性对照实验): 额外给出
+    由公开规则折叠出的当前序列, 模型只需执行一次单步变换。
     """
     fam = task["family"]
     if fam == "stateful-calc":
@@ -29,10 +43,16 @@ def build_prompt(task, k):
         return (f"从 x0={task['x0']} 开始。整数规则链（公开）：{rules}。"
                 f"请直接给出第 {k+1} 步的结果（只输出一个整数）。")
     elif fam == "chain-sort":
-        return (f"初始序列 {task['init_seq']}。变换规则（公开）：每一步先把"
-                f"序列循环右移一位，再比较前两个元素：asc 规则下前者大于后者"
-                f"则交换，desc 规则下前者小于后者则交换。"
-                f"本任务规则 = {task['sort_rule']}。"
+        rule_text = (f"变换规则（公开）：每一步先把序列循环右移一位，"
+                     f"再比较前两个元素：asc 规则下前者大于后者则交换，"
+                     f"desc 规则下前者小于后者则交换。"
+                     f"本任务规则 = {task['sort_rule']}。")
+        if show_state:
+            cur = chain_sort_state(task["init_seq"], k, task["sort_rule"])
+            return (f"当前序列为 {cur}。" + rule_text +
+                    f"请把当前序列执行一次上述操作，直接给出新序列"
+                    f"（用逗号分隔，只输出序列）。")
+        return (f"初始序列 {task['init_seq']}。" + rule_text +
                 f"请直接给出操作 {k+1} 次后的序列（用逗号分隔，只输出序列）。")
     elif fam == "ret-path":
         pairs = ", ".join(f"e{i}→e{p}" for i, p in enumerate(task["ptr"]))
@@ -43,7 +63,7 @@ def build_prompt(task, k):
     raise ValueError(f"未知任务族: {fam}")
 
 def run(model_call, out_path="etl/results/logs.jsonl", tasks_per_family=None,
-        family=None):
+        family=None, show_state=False):
     tasks = load_tasks()
     # 族过滤 (定向复测用, 如 chain-sort 强模型检验): family=None → 全部。
     if family is not None:
@@ -77,7 +97,7 @@ def run(model_call, out_path="etl/results/logs.jsonl", tasks_per_family=None,
             steps = []
             prev_valid = True
             for k in range(n):
-                prompt = build_prompt(task, k)
+                prompt = build_prompt(task, k, show_state=show_state)
                 try:
                     raw = model_call(prompt)
                 except Exception as e:
@@ -96,6 +116,7 @@ def run(model_call, out_path="etl/results/logs.jsonl", tasks_per_family=None,
                 "task_id": tid,
                 "family": task["family"],
                 "run": 0,
+                "prompt_variant": "show-state" if show_state else "rules-public",
                 "steps": steps,
             }
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
@@ -121,6 +142,11 @@ if __name__ == "__main__":
         except ValueError:
             print("ETL_TASKS_PER_FAMILY 必须为整数"); raise SystemExit(2)
     _family = _opt_value("--family", "ETL_FAMILY")
+    _show_state = ("--show-state" in _sys.argv
+                   or _os.environ.get("ETL_SHOW_STATE") == "1")
+    if _show_state:
+        print("[etl] prompt 变体: show-state (状态可见, 对照实验臂)")
     _out = _os.environ.get("ETL_OUT_PATH", "etl/results/logs.jsonl")
     # ETL_MODEL_ID 由调用环境传入 (如 llama3.1:8b), 缺省 unknown。
-    run(_real_model_call, out_path=_out, tasks_per_family=_tpf, family=_family)
+    run(_real_model_call, out_path=_out, tasks_per_family=_tpf,
+        family=_family, show_state=_show_state)

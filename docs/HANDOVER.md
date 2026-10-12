@@ -981,3 +981,30 @@ table_detach + report_snippets）。
 5. **本轮四件全收口**：② 论文 v2（c233494）③ Q3 v2 ④ arXiv 源包+
    research_audit PASS ① 复测完成并登记（本节）。未做：chain-sort 改设计
    （新任务设计，属 Q4 扩样本之后的独立决策）；arXiv 实际提交（等用户）。
+
+### 13.21 2026-10-12 深夜：第二次「全做」——chain-sort 状态可见性 2×2 收口（R2 成立）
+
+**新增**: `docs/design_chainsort_v2.md`（判读规则运行前锁定 §3, 结果补记 §6）、
+`PAPER_DRAFT/SUBMISSION_ARXIV.md`（提交清单）。
+
+1. **2×2 四格**（chain-sort, 各 30 任务/197 步, temperature 0, mismatch=0 ×4）:
+   3B v1 0.1168 → v2 **0.1015**; 7B v1 0.0863 → v2 **0.0609**。
+2. **判读（按 §3 锁定规则）**: R2 规则执行瓶颈成立（acc(v2,3B)=0.1015 ≤ 0.2）;
+   R1 状态追踪瓶颈否证（≪0.5 且无增益）; 容量交互不存在（7B 两臂均 ≤ 3B）。
+   **状态可见不解决 chain-sort**。
+3. **定性（post-hoc 注记, 见 §6/§13.21）**: v2 下模型常输出当前序列的全排序
+   （asc/desc 混用）而非机械 rotate+条件交换——`sort_rule` 被语义理解为"排序";
+   输出确为 cur 的排列（状态被正确使用）。
+4. **修复方向收窄**: 状态可见 ✗ / 更大容量 ✗ → 执行原语重构
+   （单步 worked example / 分解式指令 / 更简规则）。KI-002 已补记（§13.21 段）。
+5. **实现**: `src/run_etl.py` 加 `chain_sort_state()`（公开字段折叠, 不读
+   schedules）+ `build_prompt(..., show_state)` + rec 加 `prompt_variant` 字段;
+   `src/audit_replay.py` __main__ 补位置参数（原 main() 忽略 argv——
+   22:0x 曾误审 logs.jsonl（614 步）而非目标文件, 修后重审两 v2 文件均 PASS）。
+6. **zotero**: sqlite mtime 2026-10-08 未变, 代表标题 0 命中 → refs.bib
+   未导入, 回填继续等待用户。
+7. **arXiv**: tarball 核验完成（无 \includegraphics/\input, 唯一外部依赖
+   \bibliography{refs}）; 提交清单落盘; 实际提交等用户账号。
+8. **Q4 扩样本规格**: 已写入 design_chainsort_v2.md §5（前置=R 判读——
+   现 R2 成立 → 基线任务族需先换或用 worked-example 变体, 规格待更新）。
+9. 清理: :11435 llama-server 在 7B v2 收口后停止; GPU 无本会话进程。

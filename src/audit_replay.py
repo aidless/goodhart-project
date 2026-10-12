@@ -32,4 +32,6 @@ def main(logs="etl/results/logs.jsonl"):
     print("PASS — 判分可复现")
 
 if __name__ == "__main__":
-    main()
+    # 可选位置参数: 日志路径 (默认 etl/results/logs.jsonl)。
+    import sys as _sys
+    main(_sys.argv[1] if len(_sys.argv) > 1 else "etl/results/logs.jsonl")

@@ -902,3 +902,22 @@ table_detach + report_snippets）。
    运行日志 `etl_run_v2_public_rules.log` 随归档。
 7. **待办**：强模型复测 chain-sort（等训练 GPU 空出）；报告 3.3/3.4 节
    换新批数字并标 [exploratory]；:11435 实验后即杀（本节提交后执行）。
+
+### 13.18 2026-10-12 晚：Q2/Q4 首轮探索性分析（规则公开批）
+
+1. **Q2（作弊恢复/重锚定）**：恢复转移（前步错、本步对）46/614，按族
+   恢复率 **ret-path 16.4% > chain-sort 8.6% > stateful-calc 2.1%**
+   （分母=全部错步 188/174/165），梯度与「重锚定假说」（公开 prompt 下
+   状态重算可及性 ret-path>chain-sort>stateful）方向一致——**相容性
+   证据，非因果**。chain-sort 的 0.1168 步准确率由此调和：部分重算而非
+   规则执行。产物 `qc/q2_q4_analysis/{analyze.py,results.md,results.json}`。
+2. **Q4（短链外推长链）**：本批**不可判**——逐 k 样本仅 4–30；
+   chain-sort 斜率≈0（R²=0.004，低位平铺），ret-path R²=0.029 噪声大，
+   stateful 留出检验"成功"是退化的（预测≈0 对实测 0）。结论：Q4 仍开，
+   需多 seed 重复或扩任务。留出检验数字在 results.md，可复核。
+3. **过程修正**（诚实记录）：初版脚本把恢复步误计入错步分母
+   （stateful 158=154+4恢复），对账 188/174/165 时暴露，已修；修正后
+   恢复总数 46 与先前手数一致。agi_question_list Q2→🟢、Q4→🟡(需扩样本)。
+4. **下一步**：① 报告 3.3/3.4 换新批数字（须重跑 analyze_etl，勿手抄）；
+   ② 强模型复测 chain-sort + 扩样本后重做 Q4（等 GPU）；③ Q3 文档推进
+   （纯写作，无依赖）；④ arXiv 挂出准备（venue 已定）。

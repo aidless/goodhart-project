@@ -145,4 +145,58 @@ C。理由: 碰撞本身 (`entries[0]` 恒为 `'e0'`) 不只挡阈值推导 —�
       `_selftest_schedules`。回归测试
       `test_gate_fails_closed_when_schedules_missing`。详见 `HANDOVER.md` §13.10(c)。
 
+## KI-002 — ETL 首批地板效应是**设计属性**（任务公开信息不足以推导真值），"换更强模型重跑"在改设计前无效
+
+**状态**: 诊断成立（静态证据充分），待迷你实验定量证实 —— 实验脚本已就绪
+（`qc/b_line_solvability/mini_experiment.py`），因 KI-003 暂无法执行。
+**发现**: 2026-10-12，为执行"换模型重跑 B 线"做侦察时。
+**证据链**（静态，全部可复核）:
+
+1. `src/gen_tasks.py:110-112`（`main` 内 `public` 白名单）只保留
+   `(task_id, family, n_steps, x0, init_seq, entries)` —— 隐藏
+   `ops`（stateful-calc）/ `sort_rule`（chain-sort）/ `ptr`+`values`（ret-path）。
+   `sort_rule` 移出白名单是 2026-10-08 的卫生修复（防答案键泄露，见 KI-001
+   "新开"节），当时顺带把另两族的规则字段也全部藏掉了。
+2. `src/run_etl.py` `build_prompt`（当前版在 prompt 前置 `[任务 {task_id}]`）只拼
+   公开字段 → 三族真值均**不可从公开信息推导**（chain-sort 例外地可盲猜枚举
+   2 个候选，但无人能选中；见 KI-001 对该族判据局限的记录）。
+3. 首批 ETL（llama3.1:8b，2026-10-08，614 步）correct 5/614，且 `logs.jsonl`
+   的 `raw` 显示模型在**猜**（ret-path 答 `e1` 这类条目名而非关键值；
+   "无法/不知道"类自述 0/614）—— 与"信息饥饿"一致，与"能力不足"不矛盾但
+   无法区分。真正的归因实验见下。
+
+### 判定方案：双臂迷你实验（同任务同 k，规则隐藏 vs 规则公开）
+
+- 致量: 每族前 6 任务 × k∈{0,2} × 双臂 = 每模型 ≤ 72 次调用；判分用生产
+  `validator.check_step`（与正式跑批同一判据），raw 逐字落盘。
+- 判读: 臂 P（规则公开）步准确率显著脱离随机水平、臂 H（现状）维持地板
+  → 证实"地板=设计属性"；臂 P 也地板 → 归因转向模型能力，另议。
+- 局限（如实）: k∈{0,2} 是浅步深；小模型在臂 P 上也可能做不动多步链。
+  实验只回答"信息 vs 能力"的**方向**，不给出修复后的目标准确率。
+
+### 修复方向（实验证实后拍板，不在本条内预设立场）
+
+候选: prompt 携带完整规则（全部可解，但泄漏面最大，需门禁重验）/
+按族选择性公开（如只公开 stateful-calc 的 ops）/ 引入"规则学习"子任务族。
+无论选哪个都动 `build_prompt` 或 `gen_tasks` 白名单 → 门禁必须全量重跑。
+
+## KI-003 — 本机 `llama-server` 被外部 watchdog 秒杀，一切模型加载当前不可行
+
+**状态**: 确认（2026-10-12 16:20–16:37 实测），**不由本项目处理**——watchdog
+与它保护的训练进程属于用户另一会话（opencode）。
+**现象**: 2026-10-12 16:20 起，`ollama.service`（:11434）与临时实例（:11435，
+`CUDA_VISIBLE_DEVICES=""`）加载**任何**模型（qwen3:8b / qwen2.5:7b /
+qwen3:4b / llama3.2:3b / qwen2.5:3b / qwen3:0.6b）都在 ~5s 内报
+`llama-server process has terminated: signal: killed`。
+**根因**（已定位，非 OOM）: `/tmp/opencode/ollama_watchdog.sh`（2026-10-12
+03:10 启动）每 5s `kill -9` 全部 `llama-server` 进程，防止任何模型加载抢走
+VRAM——它保护的训练进程为 `pid 3811520`
+（`.agent-memory/aie/scripts/deeped3.py`，占 GPU 3434 MiB / 6144 MiB）。
+旁证: 内核日志 16:20/16:23/16:28/16:33 的 `Memory cgroup out of memory` 杀的是
+UID 65534 的小 python3（沙箱进程），与本现象无关；GPU 实例实际连 Vulkan 都
+只剩 2349 MiB 可用。
+**处置**: 等 `deeped3.py` 结束或由用户暂停 watchdog 后再跑 KI-002 迷你实验。
+运行命令已写在 `qc/b_line_solvability/mini_experiment.py` 模块 docstring。
+本项目不得杀 watchdog 或训练进程（跨会话资源，属用户裁决）。
+
 

@@ -97,18 +97,33 @@ def test_chain_sort_baseline_derives_from_rule_domain():
             seen += 1
     assert seen > 0, "没找到 chain-sort 样本, 判据未真正被验证"
 
-def test_hidden_rules_not_in_public_tasks():
-    """公开 tasks.jsonl 不得含任何隐藏规则/真值字段。"""
+def test_truth_chain_not_in_public_tasks_but_rules_are():
+    """公开 tasks.jsonl 不得含真值链; 但规则字段必须随任务公开 (v2 设计)。
+
+    2026-10-12 KI-002 定案反转了旧契约: 旧版把 ops/sort_rule/ptr/values
+    也藏进 schedules, 迷你实验证实三族真值不可推导 → 地板是设计属性
+    (qc/b_line_solvability/results.json)。新版规则公开、truth_chain 仍绝不
+    公开 —— 规则 ≠ 答案键, 公开规则后仍须逐步执行才能得到真值。
+    """
     tasks = ROOT / "etl" / "data" / "tasks" / "tasks.jsonl"
     if not tasks.exists():
         pytest.skip("tasks.jsonl 不存在")
-    hidden = ("sort_rule", "ops", "truth_chain", "ptr", "values")
+    rules_needed = {"stateful-calc": ("ops",),
+                    "chain-sort": ("sort_rule",),
+                    "ret-path": ("ptr", "values")}
+    seen_fams = set()
     for line in tasks.read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
         d = json.loads(line)
-        for field in hidden:
-            assert field not in d, f"{d.get('task_id')} 泄露隐藏字段 {field!r}"
+        assert "truth_chain" not in d, \
+            f"{d.get('task_id')} 泄露真值链 truth_chain"
+        fam = d.get("family")
+        seen_fams.add(fam)
+        for field in rules_needed.get(fam, ()):
+            assert field in d, \
+                f"{d.get('task_id')} 缺少应公开的规则字段 {field!r} (v2 设计)"
+    assert seen_fams == set(rules_needed), f"任务族不全: {seen_fams}"
 
 def test_gate_chain_smoke_passes():
     """门禁链第 3–5 步的基础设施冒烟测试必须通过 (确定性 stub, 非模型测量)。"""

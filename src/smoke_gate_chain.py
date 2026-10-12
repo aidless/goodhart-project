@@ -22,7 +22,6 @@ import tempfile
 import analyze_etl
 import leak_check
 import run_etl
-from leak_check import _truth_map
 
 SCHED = "etl/data/schedules/schedules.pkl"
 TASKS = "etl/data/tasks/tasks.jsonl"
@@ -55,13 +54,19 @@ def t1_gate_fail_closed(schedules):
 
 
 def t2_gate_catches_leak(schedules):
-    """stub 是 oracle (答对全部) → 门禁必须 FAIL (LEAK)。"""
-    print("\n[T2] 完美泄漏 → 门禁判 LEAK")
+    """stub 是作弊者 (任何 prompt 都答原始真值) → 门禁必须 FAIL (LEAK)。
 
-    tmap = _truth_map(schedules)
-    ok = (leak_check.run_leak_check(schedules, lambda p: tmap[p],
+    v3 诱饵范式: 门禁发的是**扰动诱饵** prompt (公开规则已被改), 诚实执行
+    只能得到诱饵真值。作弊者无视 prompt 一律吐原始真值 → 诱饵泄漏率 ~100%
+    → LEAK。这正是 v2 时代 chain-sort 阈值死结 (100% 泄漏判 CLEAN) 在 v3
+    下被修复的直接证明。
+    """
+    print("\n[T2] 诱饵泄漏 (作弊者) → 门禁判 LEAK")
+
+    oracle = leak_check._decoy_oracle(schedules)
+    ok = (leak_check.run_leak_check(schedules, oracle,
                                     rng=random.Random(0)) is False)
-    return _check("oracle 泄漏时 GATE = FAIL", ok)
+    return _check("诱饵 prompt 上答原始真值时 GATE = FAIL", ok)
 
 
 def t3_gate_passes_garbage(schedules):

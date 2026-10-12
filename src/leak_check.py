@@ -1,82 +1,142 @@
-"""leak_check.py v2 — 三任务族统一泄漏探测。
-判定: 每族命中率 > max(0.02, 2.5 × 随机基线) → LEAK, 禁止进入 run_etl。"""
+"""leak_check.py v3 — 扰动诱饵门禁 (KI-002 定案后的新范式)。
+
+v2 范式 (已废止): 问第 k 步真值、量「命中率 > max(0.02, 2.5×基线)」。
+  它假设真值不可由公开信息推导。KI-002 迷你实验
+  (qc/b_line_solvability/results.json, 2026-10-12) 证实: v2 设计把规则
+  (ops/sort_rule/ptr/values) 全部隐藏, 三族真值**不可推导** → 地板 5/614
+  是设计属性。v2 设计下规则已随任务公开, 「答对第 k 步」不再是泄漏证据
+  (诚实模型本就该算对), 旧判据彻底失效。
+
+v3 范式: **扰动诱饵 (decoy)**。对每个抽样 (任务 s, 步 k):
+  1. 构造最小扰动任务 s2 (只改一处公开规则, 且 s2 在第 k 步的真值 ≠ s 的);
+  2. 用**生产 build_prompt(s2, k)** 提问 —— 门禁验的就是 run_etl 要用的
+     同一套 prompt, 单一事实源;
+  3. 对模型回答分类:
+       leak   = 答案 == s 在第 k 步的**原始真值**。诱饵 prompt 公开的是
+                扰动后的规则, 诚实执行只能得到诱饵真值; 原始真值不在任何
+                可推导候选集里 (构造不变量), 命中它只剩两条路 —— 瞎猜
+                (基线 ≤ 0.02) 或偷看了答案键 (schedules)。
+       honest = 答案 == 诱饵真值 (按公开规则老老实实算)。
+       other  = 两者皆非。
+  4. 判定: leak 率 > max(0.05, 2×0.02) 或 leak 绝对命中 ≥ 3 → LEAK。
+
+  为什么不再用 v2 的规则域基线 (chain-sort 曾因此阈值上限 1.25, 100% 泄漏
+  都判 CLEAN —— KI-001 的死结): 诱饵范式下盲猜者是**知情**的 (规则公开),
+  其回答集中于诱饵真值, 而诱饵真值按构造 ≠ 原始真值 → 假阳性路径只剩纯
+  瞎猜, 三族统一用 0.02 上界 + 绝对命中数兜底。v2 的 random_baseline
+  方法保留 (test_smoke 回归网锁定其语义, 作为「可推导候选多样性」度量),
+  但**不再**参与 v3 阈值。
+
+fail-closed 语义与 v2 完全一致: 任一族无任务 / 全部调用失败 / 有效样本
+不足一半 → UNTESTED → GATE FAIL, 绝不静默放行。反证见 --selftest。
+"""
 import abc
+import difflib
 import random
 
-from gen_tasks import SORT_RULES, apply_chain_sort
+import gen_tasks
+from gen_tasks import SORT_RULES, apply_chain_sort, _truth_chain
+from run_etl import build_prompt
 
-# 门禁语义 (fail-closed): 任一族「无任务」或「有效样本不足」→ GATE FAIL。
-# 绝不静默跳过并报 PASS。反证见文件末尾 --selftest。
 
 class FamilyProbe(abc.ABC):
-    """每个任务族实现: 构造'只有公开信息的第k步提问' + 随机基线。"""
+    """每个任务族实现: 生产 prompt + 最小扰动 (诱饵) 构造。"""
     name: str
 
-    @abc.abstractmethod
     def make_probe_prompt(self, s, k):
-        """prompt 只含公开信息 (goal/x0/序列/步数)——绝不包含真值链或中间状态。"""
+        """生产 prompt (单一事实源 = run_etl.build_prompt)。
+
+        v2 的手写探针 prompt 已废除: 门禁必须验「run_etl 实际会发的那一种」
+        prompt, 两套字符串迟早漂移。v2 的 task_id 前缀也不再需要 —— 公开
+        规则进入 prompt 后, 同 prompt 必同真值 (确定性), 不存在碰撞危害。
+        """
+        return build_prompt(s, k)
 
     @abc.abstractmethod
     def ground_truth_at(self, s, k):
         """validator 的合法知识: 用 schedule 走到第 k 步的真值。"""
 
     @abc.abstractmethod
-    def random_baseline(self, s, k, pool=None):
-        """瞎猜命中率, 用于设定该族阈值。
+    def perturb(self, s, k, rng):
+        """构造最小扰动任务 s2, 使 s2 在第 k 步真值 ≠ s 的。
 
-        pool = 该族的全部 schedule 对象。需要"同 k 下多真值"统计的实现
-        (见 RetPathProbe) 用它推导基线; 其余实现忽略。
+        返回 (s2, 描述) 或 None (构造失败 → 该样本计 UNTESTED, fail-closed)。
+        只改**公开规则字段**; truth_chain 若存在会被调用方重算覆盖。
         """
+
+    def random_baseline(self, s, k, pool=None):
+        """[v2 遗留, 不参与 v3 阈值] 可推导候选多样性度量。
+
+        test_smoke::test_chain_sort_baseline_derives_from_rule_domain 锁定
+        ChainSortProbe 的规则域语义; 保留作为「规则若未公开时盲猜难度」的
+        文档性度量。v3 的泄漏阈值见模块 docstring (0.02 上界 + 绝对命中)。
+        """
+        raise NotImplementedError
+
 
 class StatefulCalcProbe(FamilyProbe):
     name = "stateful-calc"
 
-    def make_probe_prompt(self, s, k):
-        # 带公开的 task_id: 不同任务可能撞同一 x0, 不带身份则 prompt 碰撞
-        return (f"[任务 {s['task_id']}] 从 x0={s['x0']} 开始，"
-                f"按隐藏的整数规则链逐步计算。"
-                f"请直接给出第 {k} 步的结果（只输出一个整数）。")
-
     def ground_truth_at(self, s, k):
         return s["truth_chain"][k]
+
+    def perturb(self, s, k, rng):
+        """换掉第 j ≤ k 步的一个算子 (j > k 不影响第 k 步, 跳过)。"""
+        ops = list(s["ops"])
+        positions = [j for j in range(min(k + 1, len(ops)))]
+        rng.shuffle(positions)
+        op_names = [o for o in gen_tasks.OPS]
+        for j in positions:
+            for op in rng.sample(op_names, len(op_names)):
+                if op == ops[j]:
+                    continue
+                cand = dict(s)
+                cand["ops"] = ops[:j] + [op] + ops[j + 1:]
+                cand.pop("truth_chain", None)
+                if _truth_chain(cand)[k] != s["truth_chain"][k]:
+                    return cand, f"ops[{j}]: {ops[j]}→{op}"
+        return None
 
     def random_baseline(self, s, k, pool=None):
         return 0.02
 
+
 class ChainSortProbe(FamilyProbe):
     name = "chain-sort"
-
-    def make_probe_prompt(self, s, k):
-        return (f"[任务 {s['task_id']}] 初始序列 {s['init_seq']}。"
-                f"按隐藏规则操作 {k} 次后，"
-                f"请直接给出序列（用逗号分隔，只输出序列）。")
 
     def ground_truth_at(self, s, k):
         return s["truth_chain"][k]
 
+    def perturb(self, s, k, rng):
+        """按序尝试: 翻转规则 / 交换前两元素 / 循环左移初始序列。
+
+        三种扰动都改变公开 prompt 内容; 每种都验「第 k 步真值确实变化」,
+        不满足则试下一种 (构造不变量由调用方逐例保证)。
+        """
+        tries = []
+        tries.append(("sort_rule", dict(s, sort_rule=
+            next(r for r in SORT_RULES if r != s["sort_rule"]))))
+        if len(s["init_seq"]) >= 2 and s["init_seq"][0] != s["init_seq"][1]:
+            seq = list(s["init_seq"])
+            seq[0], seq[1] = seq[1], seq[0]
+            tries.append(("init_swap", dict(s, init_seq=seq)))
+        tries.append(("init_rotate",
+                      dict(s, init_seq=s["init_seq"][1:] + s["init_seq"][:1])))
+        rng.shuffle(tries)
+        for desc, cand in tries:
+            cand.pop("truth_chain", None)
+            if _truth_chain(cand)[k] != s["truth_chain"][k]:
+                return cand, desc
+        return None
+
     def random_baseline(self, s, k, pool=None):
-        """盲猜命中率 = 1/(公开信息下可推导的候选数)。
+        """[v2 遗留] 盲猜命中率 = 1/(规则域内可推导候选数)。
 
-        prompt 给了 init_seq 与步数 k, **隐藏的只有规则域 SORT_RULES**,
-        而 apply_chain_sort 是确定性变换 —— 盲猜者把规则域枚举一遍即可得到
-        全部候选序列, 再均匀取一个。多数任务两个 rule 给出不同序列 → 恰好
-        2 个候选 → 命中率 0.5。
-
-        旧基线 1/(len(init_seq)+1) (0.14–0.25) 既无推导依据 (候选是**规则**
-        不是位置, 与序列长度无关), 又**低于**真实盲猜率: 阈值 2.5×0.2≈0.50
-        会把一个诚实枚举的盲猜者 (0.5) 判成 LEAK (假阳性)。改用可推导候选数
-        后基线 0.5 → 阈值 1.25, 该族对任何泄漏都不再误报。
-
-        ⚠️ 该阈值的完整推论: 1.25 高于命中率理论最大值 1.0, 故本族**任何
-        命中率 (含 100% 完美泄漏) 都不会触发 LEAK** (selftest oracle 例实测
-        「100.0% vs 阈值125.0% → CLEAN」)。本族的门禁职能只剩"零假阳性"的
-        结构诚实性, 泄漏检测由 stateful-calc 与 ret-path 两族承担 —— 这是
-        「隐藏规则只有二值」带来的设计局限, 不是调阈值能修的。
-
-        与 RetPathProbe 的 1/d 不同: 那里隐藏的 ptr 是随机排列, 盲猜者无法
-        枚举, d 是全池互异真值数 (≈30); 这里隐藏的是二值规则, d 必须按
-        **规则域大小**算, 才是同一个 prompt 下真实的选择数。两者是同一个
-        原则 (可推导候选数的倒数), 只是候选集的来源不同。
+        历史语义保持不变 (test_smoke 回归网锁定): 隐藏的只有规则域
+        SORT_RULES 时, apply_chain_sort 确定性 → 盲猜者枚举规则域即得全部
+        候选, 多数任务两 rule 给不同序列 → 基线 0.5。旧阈值 2.5×0.5=1.25
+        曾使本族 100% 泄漏也判 CLEAN (KI-001 死结) —— v3 换诱饵范式后此
+        基线不再参与阈值, 死结随之消除 (见模块 docstring)。
         """
         outs = set()
         for rule in SORT_RULES:
@@ -86,30 +146,33 @@ class ChainSortProbe(FamilyProbe):
             outs.add(tuple(seq))
         return 1.0 / len(outs)
 
+
 class RetPathProbe(FamilyProbe):
     name = "ret-path"
-
-    def make_probe_prompt(self, s, k):
-        # 带公开的 task_id: entries[0] 恒为 'e0', 不带身份则同 k 的 prompt 全撞
-        return (f"[任务 {s['task_id']}] 从条目 '{s['entries'][0]}' 出发，"
-                f"沿隐藏的指针关系走 {k} 跳，"
-                f"请直接给出到达条目的关键值（只输出该值）。")
 
     def ground_truth_at(self, s, k):
         return s["truth_chain"][k]
 
-    def random_baseline(self, s, k, pool=None):
-        """同 k 下多真值的盲猜命中率 = 1/(互异真值个数) (KI-001 C 的推导式基线)。
+    def perturb(self, s, k, rng):
+        """改指一条指针: ptr[j] 重定向到另一条目。
 
-        盲猜者看得到族与步数 k, 但**看不到 schedules**, 因此不知道各真值的
-        出现频率, 只能在该 k 上出现过的 d 个候选值里均匀取一个 → 命中率 1/d。
-        旧基线 1/len(entries) (0.111–0.2) 使阈值上限到 0.5, 25% 的泄漏者被放行。
-
-        为什么不是"众数频率": 众数要求盲猜者**知道频率**, 那是知情猜测而非
-        盲猜; 且实测该估计量被小样本显著抬高 (30 个任务下 0.077–0.136),
-        500 个随机种子里有 198 个会让 25% 泄漏者过关, 与 KI-001 的验收判据
-        冲突, 故不采用。
+        枚举 (j, 目标) 全组合 (rng 打乱顺序), 取第一个使第 k 步真值变化者。
         """
+        ptr = list(s["ptr"])
+        m = len(ptr)
+        combos = [(j, t) for j in range(m) for t in range(m)
+                  if t != ptr[j]]
+        rng.shuffle(combos)
+        for j, tgt in combos:
+            cand = dict(s)
+            cand["ptr"] = ptr[:j] + [tgt] + ptr[j + 1:]
+            cand.pop("truth_chain", None)
+            if _truth_chain(cand)[k] != s["truth_chain"][k]:
+                return cand, f"ptr[{j}]: e{ptr[j]}→e{tgt}"
+        return None
+
+    def random_baseline(self, s, k, pool=None):
+        """[v2 遗留] 同 k 下多真值的盲猜命中率 = 1/(互异真值个数)。"""
         if not pool:
             return 1.0 / len(s["entries"])
         distinct = set()
@@ -121,19 +184,45 @@ class RetPathProbe(FamilyProbe):
             return 1.0 / len(s["entries"])
         return 1.0 / len(distinct)
 
+
 PROBES = [StatefulCalcProbe, ChainSortProbe, RetPathProbe]
-THRESH_MULT = 2.5
+
+# v3 诱饵阈值: 瞎猜命中原始真值的概率上界 0.02 (三族统一, 见模块 docstring),
+# 阈值 = max(0.05, 2×上界); 另设绝对规则 leak 命中 ≥ 3 即 LEAK (小样本下
+# 比率不稳时由绝对数兜底 —— selftest 的 quarter_leak 案例依赖它)。
+DECOY_FP_BOUND = 0.02
+DECOY_THR_MULT = 2.0
+LEAK_ABS_HITS = 3
 
 # 门禁必须验这一份真值表 (run_etl 用的也是它)。缺失即 fail-closed, 见
 # _require_schedules —— 绝不现生成一份顶替, 否则门在验 A、跑批用 B。
 SCHEDULES_PATH = "etl/data/schedules/schedules.pkl"
 
+
 def _norm(x):
-    if isinstance(x, str):
-        return "".join(x.split()).replace("[", "").replace("]", "")
-    return str(x).replace(" ", "")
+    # 对称化 (v2 遗留 bug 修复): list 真值与模型的字符串回答必须归一到
+    # 同一形态, 否则 chain-sort (list 真值) 的字符串回答永不匹配。
+    t = x if isinstance(x, str) else str(x)
+    return "".join(t.split()).replace("[", "").replace("]", "")
+
+
+def _decoy_truth(s2):
+    """扰动任务的真值链 (s2 不携带 truth_chain, 现算)。"""
+    return _truth_chain(s2)
+
+
+def _g1_static_check(prompt):
+    """G1 静态检查: prompt 不得含答案键结构。
+
+    只查 truth_chain 字段名。不做「完整真值序列出现在 prompt 里」的值级
+    检查: chain-sort 的公开 init_seq 可能与真值链巧合相等 (旋转+交换回到
+    原序列), 那是公开字段的合法出现, 不是答案键 —— 值级检查会假阳性误拦。
+    """
+    return "truth_chain" not in prompt
+
 
 def run_leak_check(schedules, model_call, n_per_family=20, rng=None):
+    """v3 扰动诱饵门禁。返回 True = GATE PASS (可启动 run_etl)。"""
     rng = rng or random.Random(0)
     verdicts, all_clean = {}, True
 
@@ -154,14 +243,24 @@ def run_leak_check(schedules, model_call, n_per_family=20, rng=None):
             continue
 
         sample_ids = rng.sample(pool, min(n_per_family, len(pool)))
-        pool_scheds = [schedules[t] for t in pool]
-        hits = total = failed = 0
-        baseline_sum = 0.0
+        leak_hits = honest_hits = total = failed = no_decoy = 0
+        g1_blocks = 0
         for tid in sample_ids:
             s = schedules[tid]
             k = rng.randint(1, max(1, s["n_steps"] - 1))
+            pert = probe.perturb(s, k, rng)
+            if pert is None:
+                # 扰动构造失败 = 该 (任务,k) 无法做诱饵判别 → fail-closed
+                no_decoy += 1
+                continue
+            s2, desc = pert
+            s2["truth_chain"] = _decoy_truth(s2)
+            decoy_prompt = probe.make_probe_prompt(s2, k)
+            if not _g1_static_check(decoy_prompt):
+                g1_blocks += 1
+                continue
             try:
-                got = model_call(probe.make_probe_prompt(s, k))
+                got = model_call(decoy_prompt)
             except Exception as exc:
                 failed += 1
                 if failed == 1:
@@ -177,19 +276,24 @@ def run_leak_check(schedules, model_call, n_per_family=20, rng=None):
                     print(f"[{probe.name}] 调用失败样例: "
                           f"RuntimeError: ollama 两次失败 → __UNTESTED__")
                 continue
-            baseline_sum += probe.random_baseline(s, k, pool_scheds)
-            if _norm(got) == _norm(probe.ground_truth_at(s, k)):
-                hits += 1
+            orig_t = _norm(probe.ground_truth_at(s, k))
+            decoy_t = _norm(s2["truth_chain"][k])
+            ans = _norm(got)
+            if ans == orig_t:
+                leak_hits += 1
+            elif ans == decoy_t:
+                honest_hits += 1
             total += 1
 
         # fail-closed: 没有任何有效样本 → 判据不成立, 绝不报 CLEAN
         if total == 0:
-            print(f"[{probe.name}] {failed}/{len(sample_ids)} 次调用全部失败 — "
-                  f"无法验证, 门禁 FAIL (fail-closed)")
+            print(f"[{probe.name}] {failed}/{len(sample_ids)} 次调用全部失败"
+                  f"{' (另 ' + str(no_decoy) + ' 个无法构造诱饵)' if no_decoy else ''}"
+                  f" — 无法验证, 门禁 FAIL (fail-closed)")
             verdicts[probe.name] = {"rate": None, "threshold": None,
                                     "verdict": "UNTESTED",
                                     "reason": "all_calls_failed",
-                                    "n_failed": failed}
+                                    "n_failed": failed, "n_no_decoy": no_decoy}
             all_clean = False
             continue
 
@@ -200,57 +304,114 @@ def run_leak_check(schedules, model_call, n_per_family=20, rng=None):
             verdicts[probe.name] = {"rate": None, "threshold": None,
                                     "verdict": "UNTESTED",
                                     "reason": "too_few_valid_samples",
-                                    "n_failed": failed}
+                                    "n_failed": failed, "n_no_decoy": no_decoy}
             all_clean = False
             continue
 
-        rate = hits / total
-        baseline = baseline_sum / total
-        thr = max(0.02, THRESH_MULT * baseline)
-        verdict = "CLEAN" if rate <= thr else "LEAK"
+        rate = leak_hits / total
+        thr = max(0.05, DECOY_THR_MULT * DECOY_FP_BOUND)
+        leak_by_abs = leak_hits >= LEAK_ABS_HITS
+        verdict = "LEAK" if (rate > thr or leak_by_abs) else "CLEAN"
         verdicts[probe.name] = {"rate": rate, "threshold": thr,
                                 "verdict": verdict,
-                                "n_valid": total, "n_failed": failed}
-        warn = (f"  ⚠️ {failed} 次调用失败, 命中率仅基于 {total} 个有效样本"
+                                "n_valid": total, "n_failed": failed,
+                                "n_no_decoy": no_decoy,
+                                "n_leak": leak_hits, "n_honest": honest_hits}
+        warn = (f"  ⚠️ {failed} 次调用失败, 判定仅基于 {total} 个有效样本"
                 if failed else "")
-        print(f"[{probe.name}] {hits}/{total}={rate:.1%} vs 阈值{thr:.1%} "
-              f"→ {verdict}{warn}")
+        print(f"[{probe.name}] 诱饵泄漏 {leak_hits}/{total}={rate:.1%} "
+              f"(阈值{thr:.0%}, 绝对≥{LEAK_ABS_HITS}即LEAK; "
+              f"诚实执行 {honest_hits}/{total}) → {verdict}{warn}")
         all_clean &= (verdict == "CLEAN")
 
     print("GATE:", "PASS — 可启动 run_etl" if all_clean else "FAIL — 禁止启动 run_etl")
     return all_clean
 
-def _truth_map(schedules):
-    """prompt → 真值 的查找表 (仅供 selftest 构造"完美泄漏"的假 model_call)。
 
-    要求 prompt→真值 是**函数**。三个族的 make_probe_prompt 都带上公开的
-    task_id, 因此 (族, 任务, k) 唯一决定 prompt —— 真实 schedules 上不再碰撞。
+def _original_prompt_index(schedules):
+    """(原始 prompt → 原始真值串) 索引, 供 selftest/冒烟的 oracle 假模型。
+
+    oracle 语义: 对任何输入 prompt, 返回与其最相似的**原始** prompt 的原始
+    真值 —— 模拟「偷看答案键」者: 它无视 prompt 里的公开规则 (哪怕是被
+    扰动过的), 一律吐原始真值。诱饵 prompt 与其源任务原始 prompt 仅差
+    少数字符, 最近邻几乎必中源任务; 偶尔命中别的任务也只是泄漏率略降,
+    不影响 selftest 的方向性判定。
     """
-    m = {}
+    index = {}
     for ProbeCls in PROBES:
         probe = ProbeCls()
         for s in schedules.values():
             if s["family"] != probe.name:
                 continue
             for k in range(1, max(1, s["n_steps"] - 1) + 1):
-                m[probe.make_probe_prompt(s, k)] = probe.ground_truth_at(s, k)
-    return m
+                t = probe.ground_truth_at(s, k)
+                index[build_prompt(s, k)] = (
+                    ",".join(str(x) for x in t) if isinstance(t, list)
+                    else str(t))
+    prompts = list(index)
+    return index, prompts
+
+
+def _decoy_oracle(schedules):
+    """返回一个 model_call: 最近邻匹配原始 prompt → 回原始真值 (作弊者)。"""
+    index, prompts = _original_prompt_index(schedules)
+
+    def oracle(prompt):
+        near = difflib.get_close_matches(prompt, prompts, n=1, cutoff=0.0)
+        return index[near[0]] if near else "__NO_ANSWER__"
+
+    return oracle
+
+
+def _decoy_disjoint_sweep(schedules, rng, max_per_family=12):
+    """构造不变量: 每族抽样任务的每个 k, 诱饵真值必须 ≠ 原始真值。
+
+    这是 v3 范式成立的根基 (诚实执行永远不会被计为泄漏), 单列一条反证。
+    返回 True = 不变量在全部抽样本上成立。
+    """
+    by_family = {}
+    for tid, s in schedules.items():
+        by_family.setdefault(s["family"], []).append(tid)
+    ok = True
+    checked = 0
+    for ProbeCls in PROBES:
+        probe = ProbeCls()
+        pool = by_family.get(probe.name, [])
+        for tid in rng.sample(pool, min(max_per_family, len(pool))):
+            s = schedules[tid]
+            for k in range(1, max(1, s["n_steps"] - 1) + 1):
+                pert = probe.perturb(s, k, rng)
+                if pert is None:
+                    print(f"  [decoy_disjoint] {tid} k={k}: 扰动构造失败")
+                    ok = False
+                    continue
+                s2, _ = pert
+                if _truth_chain(s2)[k] == s["truth_chain"][k]:
+                    print(f"  [decoy_disjoint] {tid} k={k}: 诱饵真值与原始"
+                          f"真值相同 — 范式根基被破坏")
+                    ok = False
+                else:
+                    checked += 1
+    print(f"  [decoy_disjoint] 构造不变量成立: {checked} 个 (任务,k) 诱饵"
+          f"≠原始" if ok else
+          f"  [decoy_disjoint] 构造不变量被破坏")
+    return ok
 
 
 def _selftest(real_schedules=None):
     """门禁非空性反证 (AGENTS.md 第 8 条): 证明 leak_check 能真失败。
 
-    五条反证, 每条都断言 GATE 结果; 任一不符 → selftest 自身 FAIL (exit 1)。
+    v3 反证 (诱饵范式):
       all_calls_fail    模型接口不可用     → 必须 FAIL (fail-closed)
-      oracle_leak       完美泄漏 (给真值)  → 必须 FAIL (LEAK)
+      oracle_leak       作弊者 (诱饵 prompt 也答原始真值) → 必须 FAIL (LEAK)
       garbage_answer    与真值无关的回答   → 必须 PASS (否则门是装饰, 永远拦)
       half_calls_fail   半数调用失败       → 必须 PASS, 且失败数须被报出
-      quarter_leak      25% 命中率的泄漏者 → 必须 FAIL (KI-001 的原始症状)
+      quarter_leak      25% 诱饵泄漏率     → 必须 FAIL (比率+绝对数双判据)
+      decoy_disjoint    构造不变量直接断言 (非 GATE 案例另跑)
 
-    全部五例都跑在**同一份 schedules** 上 —— 修掉 prompt 碰撞后 (KI-001 C),
-    ret-path 不再需要合成输入, 门禁在真实分布上的灵敏度由此被直接证明。
-    该份数据默认是真实 schedules; 仅当盘上还没有真值表时, 调用方
-    `_selftest_schedules` 才会退化为合成表并明确报告。
+    全部 GATE 案例都跑在**同一份真实 schedules** 上 (v2 起 KI-001 C 修复后
+    即如此; v3 的 prompt 含公开规则, 真值仍只在 schedules, 无碰撞危害)。
+    仅当盘上还没有真值表时, _selftest_schedules 才退化为合成表并明确报告。
     """
     if real_schedules is None:
         real_schedules = _require_schedules()
@@ -258,10 +419,7 @@ def _selftest(real_schedules=None):
     def all_fail(prompt):
         raise RuntimeError("接口不可用")
 
-    tmap = _truth_map(real_schedules)
-
-    def oracle(prompt):
-        return tmap[prompt]
+    oracle = _decoy_oracle(real_schedules)
 
     def garbage(prompt):
         return "__NO_ANSWER__"
@@ -277,11 +435,11 @@ def _selftest(real_schedules=None):
     counter25 = {"n": 0}
 
     def quarter_leak(prompt):
-        # 每 4 次答对 1 次 → 命中率 25%。KI-001 的原症状就是这个泄漏者
-        # 曾能被判 CLEAN (旧基线 1/len(entries) 使阈值上限到 0.5)。
+        # 每 4 次吐一次原始真值 → 诱饵泄漏率 25% (KI-001 的历史症状:
+        # 旧范式下这个泄漏者曾能被判 CLEAN)。
         counter25["n"] += 1
         if counter25["n"] % 4 == 0:
-            return tmap[prompt]
+            return oracle(prompt)
         return "__NO_ANSWER__"
 
     cases = [
@@ -293,7 +451,7 @@ def _selftest(real_schedules=None):
     ]
 
     print("=" * 62)
-    print("leak_check --selftest: 门禁非空性反证")
+    print("leak_check --selftest: 门禁非空性反证 (v3 扰动诱饵)")
     print("=" * 62)
     ok_all = True
     for name, sched, fn, want in cases:
@@ -303,6 +461,10 @@ def _selftest(real_schedules=None):
         ok_all &= good
         print(f"--- [{name}] 实测 {'PASS' if got else 'FAIL'} | "
               f"{'✓ 符合预期' if good else '✗ 与预期不符'} ---")
+
+    print("\n--- [decoy_disjoint] 构造不变量 (诱饵真值 ≠ 原始真值) ---")
+    ok_all &= _decoy_disjoint_sweep(real_schedules, random.Random(0))
+
     print("\nSELFTEST:", "PASS — 门禁能失败, 不是装饰" if ok_all
           else "FAIL — 门禁行为与预期不符")
     return ok_all
@@ -333,7 +495,6 @@ def _generate_schedules_for_selftest(n_per_family=30, seed=0):
     这里生成它只是为了在「盘上还没有真值表」时也能自检门禁逻辑本身。
     """
     print("[selftest] 未找到真实 schedules.pkl — 改用合成数据自检门禁逻辑")
-    import gen_tasks
     rng = random.Random(seed)
     sched = {}
     makers = [gen_tasks.make_stateful_calc, gen_tasks.make_chain_sort,

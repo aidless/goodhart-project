@@ -839,3 +839,39 @@ table_detach + report_snippets）。
    （先 --dry-run）。
 4. **待用户裁决**：① 是否采纳"规则公开"修复方向并启动门禁重设计；
    ② chain-sort 换模型（等训练结束 GPU 空出，或接远程接口）。
+
+### 13.16 2026-10-12 晚：B 线修复全链落地（规则公开 → 门禁 v3 → v3.1 校准 → GATE PASS）
+
+1. **规则公开修复**（提交 f3a32cc）：`src/gen_tasks.py` 公开白名单加
+   ops/sort_rule/ptr/values（truth_chain 仍绝不进 tasks.jsonl，有测试
+   `test_truth_chain_not_in_public_tasks_but_rules_are` 守卫）；
+   `src/run_etl.py` `build_prompt` 改公开规则版（OP_DESC 表，未知族
+   raise）。重生成 90 任务，schedules SHA256 **不变**
+   （`6c78350def493ef4…`，validator 真值逐字节一致，历史 logs 可重放）。
+2. **门禁 v3 重写**（提交 24321f2）：扰动诱饵范式（对每个 (任务,k) 构造
+   最小扰动 s2，用生产 build_prompt 提问；答原始真值=leak、答诱饵真值=
+   honest）；fail-closed 骨架保留；`_norm` 对称化修复（v2 遗留 bug）；
+   selftest 6 例；`smoke_gate_chain` T2 改 `_decoy_oracle`，SMOKE PASS，
+   pytest 8/8。
+3. **首次真实门禁 FAIL → KI-004**：v3 固定阈值下 chain-sort 2/19、
+   ret-path 3/20 判 LEAK。逐字 raw 证据（`etl/results/
+   gate_run_v3_public_rules_raw.log`）证实是**近失/盲撞噪声**而非密钥：
+   ret-path 答案空间=公开 values（盲撞≈1/9，18 错答期望撞中 2 次、实测
+   3）；chain-sort 规则翻转使诱饵真值与原始真值同旋转轨道（6,17,10 ↔
+   17,10,6）；stateful-calc 整数域 0 撞。密钥通道结构上不存在（无状态
+   API + truth_chain 从不进 prompt + G1 在验）。
+4. **v3.1 判据校准**（提交 02ae957，KI-004 详见 known_issues.md）：
+   LEAK iff `leak ≥ max(3, ceil(有效样本/4))` **且** `leak > 2×诚实执行`；
+   低功率（诚实 <50%）打印"仅安全网级"警告。事后校准的三条留痕：raw
+   逐字证据、三族噪声定量、"信号须压倒自身噪声"的先验理由。selftest
+   6 例全过（quarter_leak 反证改每 3 次吐 1 次，避免 25% 卡门槛下滑）。
+5. **GATE PASS（v3.1，真实接口）**：`etl/results/gate_run_v31_public_rules.log`
+   ——stateful 0/20、chain-sort 2/19、ret-path 3/20 全 CLEAN（三族均带
+   低功率警告），gate_exit=0。防线主体是结构性的（G1+单向流+无状态
+   API+audit_replay），行为统计是安全网；换高功率模型时须重估门槛。
+6. **全量 ETL 重跑**：qwen2.5:3b @ 临时 CPU 实例 :11435，
+   `ETL_MODEL_ID=qwen2.5:3b`，90 任务全量（tasks_per_family=None），
+   日志 `etl/results/etl_run_v2_public_rules.log`，输出
+   `etl/results/logs.jsonl`。结果判读见下节（跑完后补）。
+   环境纪律：系统 :11434 被另一会话使用（不碰）；:11435 实验后即杀；
+   训练进程（pid 3811520）全程未受影响。

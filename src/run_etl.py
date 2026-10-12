@@ -42,8 +42,15 @@ def build_prompt(task, k):
                 f"请直接给出到达条目的关键值（只输出该值）。")
     raise ValueError(f"未知任务族: {fam}")
 
-def run(model_call, out_path="etl/results/logs.jsonl", tasks_per_family=None):
+def run(model_call, out_path="etl/results/logs.jsonl", tasks_per_family=None,
+        family=None):
     tasks = load_tasks()
+    # 族过滤 (定向复测用, 如 chain-sort 强模型检验): family=None → 全部。
+    if family is not None:
+        tasks = [t for t in tasks if t["family"] == family]
+        if not tasks:
+            raise SystemExit(f"[etl] 族 {family!r} 无任务")
+        print(f"[etl] 族过滤: {family} → {len(tasks)} 任务 (定向复测)")
     # 降采样 (超时严重时每族只跑 N 个任务, 如实记录不虚报):
     # tasks_per_family=None → 全量; 否则按族取排序后前 N 个 (确定性)。
     if tasks_per_family is not None:
@@ -97,17 +104,23 @@ if __name__ == "__main__":
     import os as _os
     import sys as _sys
     from ollama_model import model_call as _real_model_call
+
+    def _opt_value(flag, env_key):
+        if flag in _sys.argv:
+            _i = _sys.argv.index(flag)
+            if _i + 1 >= len(_sys.argv):
+                print(f"用法: run_etl.py {flag} <值>"); raise SystemExit(2)
+            return _sys.argv[_i + 1]
+        return _os.environ.get(env_key)
+
     _tpf = None
-    if "--tasks-per-family" in _sys.argv:
-        _i = _sys.argv.index("--tasks-per-family")
+    _tpf_raw = _opt_value("--tasks-per-family", "ETL_TASKS_PER_FAMILY")
+    if _tpf_raw is not None:
         try:
-            _tpf = int(_sys.argv[_i + 1])
-        except (IndexError, ValueError):
-            print("用法: run_etl.py [--tasks-per-family N]"); raise SystemExit(2)
-    elif _os.environ.get("ETL_TASKS_PER_FAMILY"):
-        try:
-            _tpf = int(_os.environ["ETL_TASKS_PER_FAMILY"])
+            _tpf = int(_tpf_raw)
         except ValueError:
             print("ETL_TASKS_PER_FAMILY 必须为整数"); raise SystemExit(2)
+    _family = _opt_value("--family", "ETL_FAMILY")
+    _out = _os.environ.get("ETL_OUT_PATH", "etl/results/logs.jsonl")
     # ETL_MODEL_ID 由调用环境传入 (如 llama3.1:8b), 缺省 unknown。
-    run(_real_model_call, tasks_per_family=_tpf)
+    run(_real_model_call, out_path=_out, tasks_per_family=_tpf, family=_family)

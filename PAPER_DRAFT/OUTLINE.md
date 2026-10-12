@@ -73,9 +73,17 @@
   - AGI 清单：`docs/agi_question_list.md: L8`（Q1 ✅ 已产出）；`L12`（Q5 ✅）；`L9-L10`（Q2/Q4 🟡 地板效应 correct 0/614，当前不可分析）；`L17`（Q6 **🔓 已解冻 2026-10-08，作者拍板**）；`L26`（Q6 违纪线：未解冻前「顺手先做一点」即违纪）
   - 结论纪律：`docs/internal_report_skeleton.md: L49-L53`（下一步只列一个）；`L4-L8`（写作纪律：禁手抄/禁越档/引用待核）
 
-## Venue 建议（一句）
+## Venue 建议（2026-10-12 定夺，含实测日期）
 
 建议投控制/RL 安全方向的 workshop 或安全 track 首轮打磨（例如 NeurIPS/ICML 的 Safe RL / Safe Control 类 workshop），正刊待 Q2/Q4 长链外推与多 seed 功效补强后再定。
+
+实测日历（2026-10-12 核验）：
+- **ICLR 2027 主会已关**：摘要 2026-09-18 AOE、全文 2026-09-25 AOE（[官方 CFP](https://iclr.cc/Conferences/2027/CallForPapers)），decision 2026-12-16。
+- **AAAI-27**：会期 2027-02-16 起蒙特利尔，主会截稿已过；**workshop 论文 CFP 尚未官宣**（[AAAI-27 页](https://aaai.org/conference/aaai/aaai-27/)，按惯例 11–12 月截止，⚠️ 待官宣核实，不得引用臆测日期）。
+- **TMLR**：rolling，无截稿；本稿 6 页 + 预注册 + 证据链形态契合，但缺 Q2/Q4 分析面，首投命中面窄。
+- **arXiv**：随时可挂（ICLR 双投政策明确允许 arXiv 预印本），锁定优先权 + 为 workshop CFP 出来后预留打磨窗口。
+
+**结论（暂定，待作者确认）**：先挂 arXiv；ICLR 2027 / AAAI-27 workshop CFP 于 2026-11 前后官宣后按 fit 二选一投 workshop；正刊（TMLR 或会议主track）等 KI-002 修复 + Q2/Q4 可分析后的加强版。
 
 ## 不写什么（防越档清单）
 

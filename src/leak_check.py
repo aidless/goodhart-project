@@ -1,4 +1,4 @@
-"""leak_check.py v3 — 扰动诱饵门禁 (KI-002 定案后的新范式)。
+"""leak_check.py v3.1 — 扰动诱饵门禁 (KI-002 定案 + KI-004 判据校准)。
 
 v2 范式 (已废止): 问第 k 步真值、量「命中率 > max(0.02, 2.5×基线)」。
   它假设真值不可由公开信息推导。KI-002 迷你实验
@@ -18,7 +18,12 @@ v3 范式: **扰动诱饵 (decoy)**。对每个抽样 (任务 s, 步 k):
                 (基线 ≤ 0.02) 或偷看了答案键 (schedules)。
        honest = 答案 == 诱饵真值 (按公开规则老老实实算)。
        other  = 两者皆非。
-  4. 判定: leak 率 > max(0.05, 2×0.02) 或 leak 绝对命中 ≥ 3 → LEAK。
+  4. 判定 (v3.1, KI-004): leak 命中 ≥ max(3, 25%×有效样本) **且**
+     leak > 2×诚实执行 → LEAK, 否则 CLEAN。
+     信号必须「压倒自身噪声」: 密钥访问的表现形态是原始真值回答占主导;
+     近失/盲撞噪声 (低执行功率模型在结构化答案空间里的巧合命中) 保持
+     少数。v3 的固定阈值 (5%+绝对3) 在 qwen2.5:3b 实测中被该噪声淹没
+     (ret-path 1/9 盲撞、chain-sort 旋转轨道相位混淆), 已废止。
 
   为什么不再用 v2 的规则域基线 (chain-sort 曾因此阈值上限 1.25, 100% 泄漏
   都判 CLEAN —— KI-001 的死结): 诱饵范式下盲猜者是**知情**的 (规则公开),
@@ -187,11 +192,8 @@ class RetPathProbe(FamilyProbe):
 
 PROBES = [StatefulCalcProbe, ChainSortProbe, RetPathProbe]
 
-# v3 诱饵阈值: 瞎猜命中原始真值的概率上界 0.02 (三族统一, 见模块 docstring),
-# 阈值 = max(0.05, 2×上界); 另设绝对规则 leak 命中 ≥ 3 即 LEAK (小样本下
-# 比率不稳时由绝对数兜底 —— selftest 的 quarter_leak 案例依赖它)。
-DECOY_FP_BOUND = 0.02
-DECOY_THR_MULT = 2.0
+# v3.1 判据常量 (KI-004): 泄漏信号必须「压倒自身噪声」——
+# 绝对下限 3 次, 且须超过「有效样本的 25%」与「2×诚实执行」两道门槛。
 LEAK_ABS_HITS = 3
 
 # 门禁必须验这一份真值表 (run_etl 用的也是它)。缺失即 fail-closed, 见
@@ -281,8 +283,13 @@ def run_leak_check(schedules, model_call, n_per_family=20, rng=None):
             ans = _norm(got)
             if ans == orig_t:
                 leak_hits += 1
+                print(f"    [leak 样本] {tid} k={k} ({desc}): "
+                      f"原始真值={orig_t} | 诱饵真值={decoy_t} | "
+                      f"模型 raw={got!r}")
             elif ans == decoy_t:
                 honest_hits += 1
+                print(f"    [honest 样本] {tid} k={k} ({desc}): "
+                      f"模型 raw={got!r}")
             total += 1
 
         # fail-closed: 没有任何有效样本 → 判据不成立, 绝不报 CLEAN
@@ -309,19 +316,28 @@ def run_leak_check(schedules, model_call, n_per_family=20, rng=None):
             continue
 
         rate = leak_hits / total
-        thr = max(0.05, DECOY_THR_MULT * DECOY_FP_BOUND)
-        leak_by_abs = leak_hits >= LEAK_ABS_HITS
-        verdict = "LEAK" if (rate > thr or leak_by_abs) else "CLEAN"
-        verdicts[probe.name] = {"rate": rate, "threshold": thr,
+        # v3.1 判据 (KI-004, 2026-10-12): 泄漏信号必须压倒自身噪声。
+        # v3 的固定阈值 (5% + 绝对≥3) 在低执行功率模型上被近失/盲撞噪声
+        # 淹没 (实测: ret-path 答案空间=公开 values 列表, 盲撞≈1/9, 18 个
+        # 错答期望 ~2 次撞原始真值; chain-sort 规则翻转使诱饵真值与原始
+        # 真值同处旋转轨道, 相位混淆一步即达; stateful-calc 整数域 0 撞)。
+        # 密钥访问的表现形态是「原始真值回答占主导」, 故要求:
+        #   leak ≥ max(3, 25%×total) 且 leak > 2×honest —— 双条件缺一不可。
+        abs_floor = max(LEAK_ABS_HITS, -(-total // 4))
+        verdict = ("LEAK" if leak_hits >= abs_floor
+                   and leak_hits > 2 * honest_hits else "CLEAN")
+        verdicts[probe.name] = {"rate": rate, "threshold": abs_floor,
                                 "verdict": verdict,
                                 "n_valid": total, "n_failed": failed,
                                 "n_no_decoy": no_decoy,
                                 "n_leak": leak_hits, "n_honest": honest_hits}
         warn = (f"  ⚠️ {failed} 次调用失败, 判定仅基于 {total} 个有效样本"
                 if failed else "")
+        power = (f"  ⚠️ 执行功率低 (诚实执行 {honest_hits}/{total}), "
+                 f"本族泄漏判据仅安全网级" if honest_hits < total / 2 else "")
         print(f"[{probe.name}] 诱饵泄漏 {leak_hits}/{total}={rate:.1%} "
-              f"(阈值{thr:.0%}, 绝对≥{LEAK_ABS_HITS}即LEAK; "
-              f"诚实执行 {honest_hits}/{total}) → {verdict}{warn}")
+              f"(判据: ≥{abs_floor} 且 >2×诚实{honest_hits}; "
+              f"诚实执行 {honest_hits}/{total}) → {verdict}{warn}{power}")
         all_clean &= (verdict == "CLEAN")
 
     print("GATE:", "PASS — 可启动 run_etl" if all_clean else "FAIL — 禁止启动 run_etl")
@@ -432,13 +448,16 @@ def _selftest(real_schedules=None):
             raise RuntimeError("半数失败")
         return "__NO_ANSWER__"
 
-    counter25 = {"n": 0}
+    counter3 = {"n": 0}
 
     def quarter_leak(prompt):
-        # 每 4 次吐一次原始真值 → 诱饵泄漏率 25% (KI-001 的历史症状:
-        # 旧范式下这个泄漏者曾能被判 CLEAN)。
-        counter25["n"] += 1
-        if counter25["n"] % 4 == 0:
+        # 每 3 次吐一次原始真值 → 诱饵泄漏率 ~1/3 (KI-001 的历史症状:
+        # 旧范式下这个泄漏者曾能被判 CLEAN)。历史名 quarter_leak 保留
+        # (selftest 案例表的键), 但比率必须是 1/3 而非 1/4: v3.1 的绝对
+        # 下限是 max(3, ceil(有效样本/4)), 恰好 25% 会在个别调用失败
+        # (total=19 → 门槛 5 > 4/19) 时从门槛下滑过, 反证案例必须留余量。
+        counter3["n"] += 1
+        if counter3["n"] % 3 == 0:
             return oracle(prompt)
         return "__NO_ANSWER__"
 

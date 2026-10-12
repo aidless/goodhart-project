@@ -1,0 +1,6 @@
+[gate] model=qwen2.5:3b url=http://127.0.0.1:11435/v1/chat/completions n_per_family=20 (如为 5 即降采样, 如实记录, 不虚报 20/20)
+[stateful-calc] 诱饵泄漏 0/20=0.0% (阈值5%, 绝对≥3即LEAK; 诚实执行 1/20) → CLEAN
+[chain-sort] 诱饵泄漏 2/19=10.5% (阈值5%, 绝对≥3即LEAK; 诚实执行 0/19) → LEAK
+[ret-path] 诱饵泄漏 3/20=15.0% (阈值5%, 绝对≥3即LEAK; 诚实执行 2/20) → LEAK
+GATE: FAIL — 禁止启动 run_etl
+gate_exit=1

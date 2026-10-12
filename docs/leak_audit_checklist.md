@@ -3,11 +3,15 @@
 ## 跑前
 - [ ] tasks/ 与 schedules/ 分目录; schedules.pkl 未被任何 prompt 拼接
 - [ ] leak_check.py 三族门禁全部打印 CLEAN
-- [ ] 门禁阈值 = max(0.02, 2.5 × 随机基线), 未被人为放宽
+- [ ] 门禁判据 = **v3 扰动诱饵** (2026-10-12 起): 诱饵泄漏率 > max(0.05, 2×0.02)
+      或绝对命中 ≥ 3 → LEAK; 旧式「命中率 vs 2.5×随机基线」判据已随规则公开
+      设计 (KI-002) 废止
 
 ## 跑中
-- [ ] run_etl.py 的 build_prompt 只含公开字段 (逐族核对)
-- [ ] 无 prompt 包含 truth_chain / ops / ptr / values
+- [ ] run_etl.py 的 build_prompt 只含**公开**字段 (逐族核对; v2 设计下规则
+      ops/sort_rule/ptr/values 随任务公开, 属预期)
+- [ ] 无 prompt 包含 truth_chain (答案键) —— 规则 ≠ 答案键, 公开规则后仍须
+      逐步执行才能得到真值
 
 ## 跑后
 - [ ] audit_replay.py mismatch = 0
@@ -38,6 +42,9 @@
       阈值 1.25 > 命中率上限 1.0, 永不触发 LEAK (oracle 自检实测
       `100.0% vs 阈值125.0% → CLEAN`), 检测职能由另两族承担, 属设计局限
       (见 `HANDOVER.md` §13.10(a))。
+      **→ 2026-10-12 追记: 该局限已随 v3 扰动诱饵范式消除** —— 规则公开后
+      盲猜者集中于诱饵真值 (按构造 ≠ 原始真值), chain-sort 恢复完整检测力
+      (selftest oracle 案例实测 100% → LEAK)。上述 2026-10-08 记录按历史保留。
 - [x] **门禁链第 3–5 步** —— **基础设施冒烟已通过 (2026-10-08)**: `src/smoke_gate_chain.py`
       用确定性 stub 验证 fail-closed 与 run_etl→audit_replay→analyze_etl 契约,
       产物落临时目录。**真实模型调用仍被『环境无 LLM 凭据』阻塞**, 真实数字尚不存在
@@ -47,8 +54,13 @@
       现正式门禁走 `_require_schedules()`, 缺失即退出码 2 fail-closed;
       合成表仅供 `--selftest` 且明确报告 (见 `HANDOVER.md` §13.10(c))。
 
-## 跑前补充检查 (2026-10-08 增)
+## 跑前补充检查 (2026-10-08 增, 2026-10-12 随 KI-002 设计变更更新)
 
-- [ ] 公开 `tasks.jsonl` 不得含隐藏字段 (`sort_rule` / `ops` / `truth_chain` /
-      `ptr` / `values`) —— 由 `tests/test_smoke.py::test_hidden_rules_not_in_public_tasks` 守护
+- [ ] 公开 `tasks.jsonl` **不得含 truth_chain** (答案键), 且**必须含规则字段**
+      (`ops` / `sort_rule` / `ptr` / `values`, 按族) —— 由
+      `tests/test_smoke.py::test_truth_chain_not_in_public_tasks_but_rules_are` 守护。
+      旧契约「规则字段也隐藏」已于 2026-10-12 反转 (KI-002: 规则隐藏时三族
+      真值不可推导, 地板是设计属性); 提交 f3a32cc + 24321f2。
+- [ ] v3 门禁的构造不变量成立: 每个抽样的诱饵真值 ≠ 原始真值
+      (`--selftest` 的 decoy_disjoint 案例守护, 实测 219 个 (任务,k) 全判别)
 

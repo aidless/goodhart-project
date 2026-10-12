@@ -1,0 +1,14 @@
+[gate] model=qwen2.5:3b url=http://127.0.0.1:11435/v1/chat/completions n_per_family=20 (如为 5 即降采样, 如实记录, 不虚报 20/20)
+    [honest 样本] stateful-calc-0-002 k=2 (ops[2]: add3→sub1): 模型 raw='2'
+[stateful-calc] 诱饵泄漏 0/20=0.0% (阈值5%, 绝对≥3即LEAK; 诚实执行 1/20) → CLEAN
+    [leak 样本] chain-sort-1-004 k=1 (init_rotate): 原始真值=7,14,18 | 诱饵真值=7,18,14 | 模型 raw='7,14,18'
+    [leak 样本] chain-sort-1-016 k=4 (sort_rule): 原始真值=6,17,10 | 诱饵真值=17,10,6 | 模型 raw='6,17,10'
+[chain-sort] 诱饵泄漏 2/19=10.5% (阈值5%, 绝对≥3即LEAK; 诚实执行 0/19) → LEAK
+    [honest 样本] ret-path-2-004 k=3 (ptr[5]: e6→e5): 模型 raw='55'
+    [leak 样本] ret-path-2-009 k=2 (ptr[0]: e5→e2): 原始真值=20 | 诱饵真值=64 | 模型 raw='20'
+    [leak 样本] ret-path-2-007 k=5 (ptr[0]: e1→e0): 原始真值=68 | 诱饵真值=14 | 模型 raw='68'
+    [honest 样本] ret-path-2-023 k=4 (ptr[2]: e1→e8): 模型 raw='78'
+    [leak 样本] ret-path-2-021 k=2 (ptr[0]: e4→e1): 原始真值=90 | 诱饵真值=37 | 模型 raw='90'
+[ret-path] 诱饵泄漏 3/20=15.0% (阈值5%, 绝对≥3即LEAK; 诚实执行 2/20) → LEAK
+GATE: FAIL — 禁止启动 run_etl
+gate_exit=1

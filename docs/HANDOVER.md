@@ -818,3 +818,24 @@ table_detach + report_snippets）。
    实验 → 按结果拍板修复方向（prompt 携带规则 / 按族选择性公开）→ 门禁
    全量重跑 → 换模型重跑 ETL；(b) 论文线：venue 已建议 workshop 首投
    （`PAPER_DRAFT/OUTLINE.md` §Venue），正刊等 Q2/Q4 可分析后。
+
+### 13.15 2026-10-12 傍晚：KI-003 解除、迷你实验定案 KI-002、Zotero 库探明
+
+1. **KI-003 自行解除**：17:00 复测 watchdog 进程已消失（一个 embed 用
+   llama-server 稳定存活）。临时 CPU 实例（:11435，qwen2.5:3b，未触碰 GPU）
+   跑通全部 72 次调用后已杀（跑完即杀，符合预案）。
+2. **KI-002 定案**（详见 `docs/known_issues.md` KI-002 更新）：双臂迷你实验
+   证实"地板=设计属性"；拍板修复方向 = **prompt 携带完整规则（全族公开）**；
+   ret-path 0→5/12、stateful-calc 0→3/12（全在 k=0）当场获益；chain-sort
+   规则公开仍 0/12（"只旋转不执行交换"），需强模型+改设计双条件。
+   **连带**：门禁语义必须重写（规则公开使现门禁前提失效），方案待设计。
+   全量数据 `qc/b_line_solvability/results.json`（raw 逐字）。
+3. **Zotero 探明**：本机 Zotero 库（~/Zotero/zotero.sqlite，只读副本检查）
+   12274 条全是用户自有稿件（"自有正典稿件"），**0 条**带 DOI 字段，
+   17 条台账引用无一在库 → zotero_key 回填物理不可能，0/17 是真相不是
+   查询错误。`tools/reconcile_zotero.py` 已修好待用；用户侧动作：把
+   `paper/refs.bib` 拖入 Zotero 导入（原生支持 BibTeX）→ 导出 CSV →
+   `python3 tools/reconcile_zotero.py <csv> prereg/citation_verification.csv`
+   （先 --dry-run）。
+4. **待用户裁决**：① 是否采纳"规则公开"修复方向并启动门禁重设计；
+   ② chain-sort 换模型（等训练结束 GPU 空出，或接远程接口）。

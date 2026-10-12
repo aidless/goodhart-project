@@ -1,0 +1,737 @@
+{
+ "model": "qwen2.5:3b",
+ "date": "2026-10-12T17:11:02+0800",
+ "design": "同任务同k, 臂H=生产prompt(规则隐藏), 臂P=规则公开; 判分=生产 validator.check_step; 每族前6任务×k∈{0,2}",
+ "summary": {
+  "chain-sort / H-hidden": "1/12",
+  "chain-sort / P-public": "0/12",
+  "ret-path / H-hidden": "0/12",
+  "ret-path / P-public": "5/12",
+  "stateful-calc / H-hidden": "0/12",
+  "stateful-calc / P-public": "3/12"
+ },
+ "n_calls": 72,
+ "wall_s": 298.8,
+ "calls": [
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-000",
+   "k": 0,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "8,8,15,14",
+   "latency_s": 1.17,
+   "prompt": "初始序列 [8, 8, 15, 13]。按隐藏规则操作 1 次后，请直接给出序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-000",
+   "k": 0,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "8,15,13,8",
+   "latency_s": 0.82,
+   "prompt": "初始序列 [8, 8, 15, 13]。变换规则（公开）：每一步先把序列循环右移一位，再比较前两个元素：asc 规则下前者大于后者则交换，desc 规则下前者小于后者则交换。本任务规则 = desc。请直接给出操作 1 次后的序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-000",
+   "k": 2,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "8,8,15,13",
+   "latency_s": 2.24,
+   "prompt": "初始序列 [8, 8, 15, 13]。按隐藏规则操作 3 次后，请直接给出序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-000",
+   "k": 2,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "8,15,13,8",
+   "latency_s": 0.85,
+   "prompt": "初始序列 [8, 8, 15, 13]。变换规则（公开）：每一步先把序列循环右移一位，再比较前两个元素：asc 规则下前者大于后者则交换，desc 规则下前者小于后者则交换。本任务规则 = desc。请直接给出操作 3 次后的序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-001",
+   "k": 0,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "13,19,14",
+   "latency_s": 0.77,
+   "prompt": "初始序列 [13, 19, 14]。按隐藏规则操作 1 次后，请直接给出序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-001",
+   "k": 0,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "19,14,13",
+   "latency_s": 1.17,
+   "prompt": "初始序列 [13, 19, 14]。变换规则（公开）：每一步先把序列循环右移一位，再比较前两个元素：asc 规则下前者大于后者则交换，desc 规则下前者小于后者则交换。本任务规则 = asc。请直接给出操作 1 次后的序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-001",
+   "k": 2,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "14,19,14",
+   "latency_s": 0.91,
+   "prompt": "初始序列 [13, 19, 14]。按隐藏规则操作 3 次后，请直接给出序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-001",
+   "k": 2,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "14,13,19",
+   "latency_s": 1.29,
+   "prompt": "初始序列 [13, 19, 14]。变换规则（公开）：每一步先把序列循环右移一位，再比较前两个元素：asc 规则下前者大于后者则交换，desc 规则下前者小于后者则交换。本任务规则 = asc。请直接给出操作 3 次后的序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-002",
+   "k": 0,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "15,9,6,3",
+   "latency_s": 0.72,
+   "prompt": "初始序列 [15, 3, 9, 6]。按隐藏规则操作 1 次后，请直接给出序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-002",
+   "k": 0,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "15,9,6,3",
+   "latency_s": 0.82,
+   "prompt": "初始序列 [15, 3, 9, 6]。变换规则（公开）：每一步先把序列循环右移一位，再比较前两个元素：asc 规则下前者大于后者则交换，desc 规则下前者小于后者则交换。本任务规则 = desc。请直接给出操作 1 次后的序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-002",
+   "k": 2,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "15,3,6,3",
+   "latency_s": 1.06,
+   "prompt": "初始序列 [15, 3, 9, 6]。按隐藏规则操作 3 次后，请直接给出序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-002",
+   "k": 2,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "6,9,15,3",
+   "latency_s": 0.97,
+   "prompt": "初始序列 [15, 3, 9, 6]。变换规则（公开）：每一步先把序列循环右移一位，再比较前两个元素：asc 规则下前者大于后者则交换，desc 规则下前者小于后者则交换。本任务规则 = desc。请直接给出操作 3 次后的序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-003",
+   "k": 0,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "2,16,12",
+   "latency_s": 1.11,
+   "prompt": "初始序列 [2, 16, 11]。按隐藏规则操作 1 次后，请直接给出序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-003",
+   "k": 0,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "2,16,11",
+   "latency_s": 0.84,
+   "prompt": "初始序列 [2, 16, 11]。变换规则（公开）：每一步先把序列循环右移一位，再比较前两个元素：asc 规则下前者大于后者则交换，desc 规则下前者小于后者则交换。本任务规则 = desc。请直接给出操作 1 次后的序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-003",
+   "k": 2,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "2,8,4,2",
+   "latency_s": 1.14,
+   "prompt": "初始序列 [2, 16, 11]。按隐藏规则操作 3 次后，请直接给出序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-003",
+   "k": 2,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "2,2,16",
+   "latency_s": 0.82,
+   "prompt": "初始序列 [2, 16, 11]。变换规则（公开）：每一步先把序列循环右移一位，再比较前两个元素：asc 规则下前者大于后者则交换，desc 规则下前者小于后者则交换。本任务规则 = desc。请直接给出操作 3 次后的序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-004",
+   "k": 0,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "14,7,18",
+   "latency_s": 2.06,
+   "prompt": "初始序列 [14, 7, 18]。按隐藏规则操作 1 次后，请直接给出序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-004",
+   "k": 0,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "14,7,18",
+   "latency_s": 13.56,
+   "prompt": "初始序列 [14, 7, 18]。变换规则（公开）：每一步先把序列循环右移一位，再比较前两个元素：asc 规则下前者大于后者则交换，desc 规则下前者小于后者则交换。本任务规则 = asc。请直接给出操作 1 次后的序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-004",
+   "k": 2,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "18,7,18",
+   "latency_s": 4.13,
+   "prompt": "初始序列 [14, 7, 18]。按隐藏规则操作 3 次后，请直接给出序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-004",
+   "k": 2,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "14,7,18",
+   "latency_s": 2.29,
+   "prompt": "初始序列 [14, 7, 18]。变换规则（公开）：每一步先把序列循环右移一位，再比较前两个元素：asc 规则下前者大于后者则交换，desc 规则下前者小于后者则交换。本任务规则 = asc。请直接给出操作 3 次后的序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-005",
+   "k": 0,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "1, 14, 11, 13",
+   "latency_s": 2.4,
+   "prompt": "初始序列 [1, 13, 14, 11]。按隐藏规则操作 1 次后，请直接给出序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-005",
+   "k": 0,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "1,11,1,13",
+   "latency_s": 19.5,
+   "prompt": "初始序列 [1, 13, 14, 11]。变换规则（公开）：每一步先把序列循环右移一位，再比较前两个元素：asc 规则下前者大于后者则交换，desc 规则下前者小于后者则交换。本任务规则 = asc。请直接给出操作 1 次后的序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-005",
+   "k": 2,
+   "arm": "H-hidden",
+   "valid": true,
+   "raw": "1,13,14,11",
+   "latency_s": 3.83,
+   "prompt": "初始序列 [1, 13, 14, 11]。按隐藏规则操作 3 次后，请直接给出序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "chain-sort",
+   "task_id": "chain-sort-1-005",
+   "k": 2,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "1,11,14,13",
+   "latency_s": 10.52,
+   "prompt": "初始序列 [1, 13, 14, 11]。变换规则（公开）：每一步先把序列循环右移一位，再比较前两个元素：asc 规则下前者大于后者则交换，desc 规则下前者小于后者则交换。本任务规则 = asc。请直接给出操作 3 次后的序列（用逗号分隔，只输出序列）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-000",
+   "k": 0,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "f0",
+   "latency_s": 8.25,
+   "prompt": "从条目 'e0' 出发，沿隐藏的指针关系走 1 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-000",
+   "k": 0,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "67",
+   "latency_s": 4.33,
+   "prompt": "指针映射（公开）：e0→e1, e1→e2, e2→e3, e3→e4, e4→e0。各条目关键值（公开）：e0=26, e1=15, e2=48, e3=11, e4=67。从条目 'e0' 出发沿指针走 1 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-000",
+   "k": 2,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "f9",
+   "latency_s": 6.62,
+   "prompt": "从条目 'e0' 出发，沿隐藏的指针关系走 3 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-000",
+   "k": 2,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "67",
+   "latency_s": 4.22,
+   "prompt": "指针映射（公开）：e0→e1, e1→e2, e2→e3, e3→e4, e4→e0。各条目关键值（公开）：e0=26, e1=15, e2=48, e3=11, e4=67。从条目 'e0' 出发沿指针走 3 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-001",
+   "k": 0,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "f0",
+   "latency_s": 3.85,
+   "prompt": "从条目 'e0' 出发，沿隐藏的指针关系走 1 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-001",
+   "k": 0,
+   "arm": "P-public",
+   "valid": true,
+   "raw": "77",
+   "latency_s": 1.8,
+   "prompt": "指针映射（公开）：e0→e0, e1→e5, e2→e4, e3→e2, e4→e3, e5→e1。各条目关键值（公开）：e0=77, e1=74, e2=14, e3=83, e4=21, e5=96。从条目 'e0' 出发沿指针走 1 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-001",
+   "k": 2,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "f9",
+   "latency_s": 9.82,
+   "prompt": "从条目 'e0' 出发，沿隐藏的指针关系走 3 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-001",
+   "k": 2,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "83",
+   "latency_s": 7.2,
+   "prompt": "指针映射（公开）：e0→e0, e1→e5, e2→e4, e3→e2, e4→e3, e5→e1。各条目关键值（公开）：e0=77, e1=74, e2=14, e3=83, e4=21, e5=96。从条目 'e0' 出发沿指针走 3 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-002",
+   "k": 0,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "f0",
+   "latency_s": 8.33,
+   "prompt": "从条目 'e0' 出发，沿隐藏的指针关系走 1 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-002",
+   "k": 0,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "85",
+   "latency_s": 43.43,
+   "prompt": "指针映射（公开）：e0→e0, e1→e4, e2→e5, e3→e3, e4→e2, e5→e8, e6→e7, e7→e6, e8→e1。各条目关键值（公开）：e0=87, e1=85, e2=39, e3=12, e4=94, e5=10, e6=33, e7=48, e8=74。从条目 'e0' 出发沿指针走 1 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-002",
+   "k": 2,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "f9",
+   "latency_s": 8.49,
+   "prompt": "从条目 'e0' 出发，沿隐藏的指针关系走 3 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-002",
+   "k": 2,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "74",
+   "latency_s": 1.74,
+   "prompt": "指针映射（公开）：e0→e0, e1→e4, e2→e5, e3→e3, e4→e2, e5→e8, e6→e7, e7→e6, e8→e1。各条目关键值（公开）：e0=87, e1=85, e2=39, e3=12, e4=94, e5=10, e6=33, e7=48, e8=74。从条目 'e0' 出发沿指针走 3 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-003",
+   "k": 0,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "f0",
+   "latency_s": 2.63,
+   "prompt": "从条目 'e0' 出发，沿隐藏的指针关系走 1 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-003",
+   "k": 0,
+   "arm": "P-public",
+   "valid": true,
+   "raw": "26",
+   "latency_s": 1.24,
+   "prompt": "指针映射（公开）：e0→e5, e1→e4, e2→e1, e3→e6, e4→e3, e5→e0, e6→e2。各条目关键值（公开）：e0=59, e1=59, e2=17, e3=30, e4=92, e5=26, e6=40。从条目 'e0' 出发沿指针走 1 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-003",
+   "k": 2,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "f9",
+   "latency_s": 1.03,
+   "prompt": "从条目 'e0' 出发，沿隐藏的指针关系走 3 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-003",
+   "k": 2,
+   "arm": "P-public",
+   "valid": true,
+   "raw": "26",
+   "latency_s": 4.96,
+   "prompt": "指针映射（公开）：e0→e5, e1→e4, e2→e1, e3→e6, e4→e3, e5→e0, e6→e2。各条目关键值（公开）：e0=59, e1=59, e2=17, e3=30, e4=92, e5=26, e6=40。从条目 'e0' 出发沿指针走 3 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-004",
+   "k": 0,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "f0",
+   "latency_s": 0.97,
+   "prompt": "从条目 'e0' 出发，沿隐藏的指针关系走 1 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-004",
+   "k": 0,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "87",
+   "latency_s": 3.29,
+   "prompt": "指针映射（公开）：e0→e2, e1→e1, e2→e5, e3→e4, e4→e3, e5→e6, e6→e0。各条目关键值（公开）：e0=87, e1=20, e2=96, e3=99, e4=29, e5=55, e6=62。从条目 'e0' 出发沿指针走 1 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-004",
+   "k": 2,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "f9",
+   "latency_s": 5.6,
+   "prompt": "从条目 'e0' 出发，沿隐藏的指针关系走 3 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-004",
+   "k": 2,
+   "arm": "P-public",
+   "valid": true,
+   "raw": "62",
+   "latency_s": 3.23,
+   "prompt": "指针映射（公开）：e0→e2, e1→e1, e2→e5, e3→e4, e4→e3, e5→e6, e6→e0。各条目关键值（公开）：e0=87, e1=20, e2=96, e3=99, e4=29, e5=55, e6=62。从条目 'e0' 出发沿指针走 3 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-005",
+   "k": 0,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "f0",
+   "latency_s": 6.05,
+   "prompt": "从条目 'e0' 出发，沿隐藏的指针关系走 1 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-005",
+   "k": 0,
+   "arm": "P-public",
+   "valid": true,
+   "raw": "86",
+   "latency_s": 2.29,
+   "prompt": "指针映射（公开）：e0→e1, e1→e2, e2→e4, e3→e8, e4→e5, e5→e0, e6→e3, e7→e6, e8→e7。各条目关键值（公开）：e0=14, e1=86, e2=89, e3=26, e4=90, e5=51, e6=23, e7=99, e8=80。从条目 'e0' 出发沿指针走 1 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-005",
+   "k": 2,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "f9",
+   "latency_s": 1.75,
+   "prompt": "从条目 'e0' 出发，沿隐藏的指针关系走 3 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "ret-path",
+   "task_id": "ret-path-2-005",
+   "k": 2,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "51",
+   "latency_s": 2.57,
+   "prompt": "指针映射（公开）：e0→e1, e1→e2, e2→e4, e3→e8, e4→e5, e5→e0, e6→e3, e7→e6, e8→e7。各条目关键值（公开）：e0=14, e1=86, e2=89, e3=26, e4=90, e5=51, e6=23, e7=99, e8=80。从条目 'e0' 出发沿指针走 3 跳，请直接给出到达条目的关键值（只输出该值）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-000",
+   "k": 0,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "22",
+   "latency_s": 7.78,
+   "prompt": "从 x0=7 开始，按隐藏的整数规则链逐步推进。请直接给出第 1 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-000",
+   "k": 0,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "84",
+   "latency_s": 4.05,
+   "prompt": "从 x0=7 开始。整数规则链（公开）：第1步 x ← x + 7; 第2步 x ← x + 3; 第3步 x ← x − 1; 第4步 x ← x × 3; 第5步 x ← x + 7; 第6步 x ← x + 7; 第7步 x ← x − 1; 第8步 x ← x + 7; 第9步 x ← x − 1; 第10步 x ← x × 3。请直接给出第 1 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-000",
+   "k": 2,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "19",
+   "latency_s": 4.73,
+   "prompt": "从 x0=7 开始，按隐藏的整数规则链逐步推进。请直接给出第 3 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-000",
+   "k": 2,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "242",
+   "latency_s": 5.69,
+   "prompt": "从 x0=7 开始。整数规则链（公开）：第1步 x ← x + 7; 第2步 x ← x + 3; 第3步 x ← x − 1; 第4步 x ← x × 3; 第5步 x ← x + 7; 第6步 x ← x + 7; 第7步 x ← x − 1; 第8步 x ← x + 7; 第9步 x ← x − 1; 第10步 x ← x × 3。请直接给出第 3 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-001",
+   "k": 0,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "12",
+   "latency_s": 1.7,
+   "prompt": "从 x0=4 开始，按隐藏的整数规则链逐步推进。请直接给出第 1 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-001",
+   "k": 0,
+   "arm": "P-public",
+   "valid": true,
+   "raw": "8",
+   "latency_s": 1.29,
+   "prompt": "从 x0=4 开始。整数规则链（公开）：第1步 x ← x × 2; 第2步 x ← x − 1; 第3步 x ← x × 2; 第4步 x ← x + 3; 第5步 x ← x × 3; 第6步 x ← x − 1; 第7步 x ← x × 3; 第8步 x ← x 与 5 按位异或。请直接给出第 1 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-001",
+   "k": 2,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "16",
+   "latency_s": 1.4,
+   "prompt": "从 x0=4 开始，按隐藏的整数规则链逐步推进。请直接给出第 3 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-001",
+   "k": 2,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "16",
+   "latency_s": 2.45,
+   "prompt": "从 x0=4 开始。整数规则链（公开）：第1步 x ← x × 2; 第2步 x ← x − 1; 第3步 x ← x × 2; 第4步 x ← x + 3; 第5步 x ← x × 3; 第6步 x ← x − 1; 第7步 x ← x × 3; 第8步 x ← x 与 5 按位异或。请直接给出第 3 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-002",
+   "k": 0,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "9",
+   "latency_s": 3.41,
+   "prompt": "从 x0=3 开始，按隐藏的整数规则链逐步推进。请直接给出第 1 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-002",
+   "k": 0,
+   "arm": "P-public",
+   "valid": true,
+   "raw": "6",
+   "latency_s": 1.91,
+   "prompt": "从 x0=3 开始。整数规则链（公开）：第1步 x ← x + 3; 第2步 x ← x 与 5 按位异或; 第3步 x ← x + 3; 第4步 x ← x 与 5 按位异或; 第5步 x ← x − 1; 第6步 x ← x + 7。请直接给出第 1 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-002",
+   "k": 2,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "9",
+   "latency_s": 0.88,
+   "prompt": "从 x0=3 开始，按隐藏的整数规则链逐步推进。请直接给出第 3 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-002",
+   "k": 2,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "11",
+   "latency_s": 2.15,
+   "prompt": "从 x0=3 开始。整数规则链（公开）：第1步 x ← x + 3; 第2步 x ← x 与 5 按位异或; 第3步 x ← x + 3; 第4步 x ← x 与 5 按位异或; 第5步 x ← x − 1; 第6步 x ← x + 7。请直接给出第 3 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-003",
+   "k": 0,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "27",
+   "latency_s": 3.01,
+   "prompt": "从 x0=9 开始，按隐藏的整数规则链逐步推进。请直接给出第 1 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-003",
+   "k": 0,
+   "arm": "P-public",
+   "valid": true,
+   "raw": "8",
+   "latency_s": 3.41,
+   "prompt": "从 x0=9 开始。整数规则链（公开）：第1步 x ← x − 1; 第2步 x ← x + 7; 第3步 x ← x − 1; 第4步 x ← x × 3。请直接给出第 1 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-003",
+   "k": 2,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "26",
+   "latency_s": 2.04,
+   "prompt": "从 x0=9 开始，按隐藏的整数规则链逐步推进。请直接给出第 3 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-003",
+   "k": 2,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "54",
+   "latency_s": 3.38,
+   "prompt": "从 x0=9 开始。整数规则链（公开）：第1步 x ← x − 1; 第2步 x ← x + 7; 第3步 x ← x − 1; 第4步 x ← x × 3。请直接给出第 3 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-004",
+   "k": 0,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "12",
+   "latency_s": 1.13,
+   "prompt": "从 x0=4 开始，按隐藏的整数规则链逐步推进。请直接给出第 1 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-004",
+   "k": 0,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "29",
+   "latency_s": 1.61,
+   "prompt": "从 x0=4 开始。整数规则链（公开）：第1步 x ← x + 7; 第2步 x ← x + 7; 第3步 x ← x × 3; 第4步 x ← x − 1; 第5步 x ← x + 3; 第6步 x ← x × 3; 第7步 x ← x + 3; 第8步 x ← x + 3。请直接给出第 1 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-004",
+   "k": 2,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "16",
+   "latency_s": 1.38,
+   "prompt": "从 x0=4 开始，按隐藏的整数规则链逐步推进。请直接给出第 3 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-004",
+   "k": 2,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "183",
+   "latency_s": 1.65,
+   "prompt": "从 x0=4 开始。整数规则链（公开）：第1步 x ← x + 7; 第2步 x ← x + 7; 第3步 x ← x × 3; 第4步 x ← x − 1; 第5步 x ← x + 3; 第6步 x ← x × 3; 第7步 x ← x + 3; 第8步 x ← x + 3。请直接给出第 3 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-005",
+   "k": 0,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "22",
+   "latency_s": 6.66,
+   "prompt": "从 x0=7 开始，按隐藏的整数规则链逐步推进。请直接给出第 1 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-005",
+   "k": 0,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "7",
+   "latency_s": 1.09,
+   "prompt": "从 x0=7 开始。整数规则链（公开）：第1步 x ← x 与 5 按位异或; 第2步 x ← x 与 5 按位异或; 第3步 x ← x + 3; 第4步 x ← x × 3; 第5步 x ← x + 7; 第6步 x ← x − 1; 第7步 x ← x × 2; 第8步 x ← x 与 5 按位异或; 第9步 x ← x − 1。请直接给出第 1 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-005",
+   "k": 2,
+   "arm": "H-hidden",
+   "valid": false,
+   "raw": "19",
+   "latency_s": 6.08,
+   "prompt": "从 x0=7 开始，按隐藏的整数规则链逐步推进。请直接给出第 3 步的结果（只输出一个整数）。"
+  },
+  {
+   "family": "stateful-calc",
+   "task_id": "stateful-calc-0-005",
+   "k": 2,
+   "arm": "P-public",
+   "valid": false,
+   "raw": "44",
+   "latency_s": 11.14,
+   "prompt": "从 x0=7 开始。整数规则链（公开）：第1步 x ← x 与 5 按位异或; 第2步 x ← x 与 5 按位异或; 第3步 x ← x + 3; 第4步 x ← x × 3; 第5步 x ← x + 7; 第6步 x ← x − 1; 第7步 x ← x × 2; 第8步 x ← x 与 5 按位异或; 第9步 x ← x − 1。请直接给出第 3 步的结果（只输出一个整数）。"
+  }
+ ]
+}

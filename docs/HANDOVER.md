@@ -921,3 +921,44 @@ table_detach + report_snippets）。
 4. **下一步**：① 报告 3.3/3.4 换新批数字（须重跑 analyze_etl，勿手抄）；
    ② 强模型复测 chain-sort + 扩样本后重做 Q4（等 GPU）；③ Q3 文档推进
    （纯写作，无依赖）；④ arXiv 挂出准备（venue 已定）。
+
+### 13.19 2026-10-12 夜：「全做」四件推进——论文 v2 双批叙事 + Q3 v2 + arXiv 源包 + V-ETL-02
+
+承接 §13.18 下一步四件（用户指令「全做」）：
+
+1. **② 报告换数字（完成）**：`paper/main.tex` 重写为双批叙事——摘要（地板→
+   设计属性诊断→规则公开→地板解除+误差分解获得作用面）、sec:etl 两批模型
+   说明（batch1 llama3.1:8b 隐藏规则 / batch2 qwen2.5:3b 公开规则，schedules
+   哈希跨批不变）、新增 `tab:etl-v2`（0.1168/0.1912/0.1174，来源
+   `archive_20261012_public_rules/table_detach.csv` 逐字）、Results 节改名
+   "a floor, its diagnosis, and the fix"（KI-002 诊断入正文 bullet）、
+   sec:etl-decomp 重写为 "gains a support surface"（cumulative 82/76/69%、
+   恢复 46/614、梯度 16.4/8.6/2.1%，相容性声明）、Limitations 更新（Q4 仍
+   不可判 R²≈0）。`PAPER_DRAFT/RESULTS_DRAFT.md` 加 §4.2b。编译
+   xelatex×2 PASS，`\emergencystretch=3em` 清掉 3 处 overfull，7 页；
+   **research_numbers 对账 PASS（252 vs 113，0 diff）**。
+2. **③ Q3 推进（完成，v2）**：`docs/q3_downgrade.md` 追加 §5 v2 修订——
+   由两个已运行实例各暴露一个不完备组件：KI-002→新增 (d) 通道有效性
+   前置条件（mini_experiment 双臂即最小证明）；KI-004→(b) 拒绝集须与
+   通道噪声联合校准（v3.1 语义）；Q2 相容性证据→(c) 细化为须事先声明
+   推断方向（相容性/因果）。回答从三元组升级为四元组。§2 表第 1 行状态
+   更新为已检验（门禁 v3.1 判据同步）。
+3. **④ arXiv 准备（完成）**：`research_audit` main.pdf **PASS**（0 error
+   0 warning，3 info，无身份泄漏）；源包 `paper/goodhart_arxiv_v2_source.tar.gz`
+   （main.tex+refs.bib+main.bbl，12KB）。
+4. **台账**：`CLAIM_LEDGER.md` 追加 **V-ETL-02**（批次 2 点估计+exploratory
+   边界+双批对照的非受控声明）；备份
+   `CLAIM_LEDGER.md.bak-20261012T*before-vetl02`。
+5. **① 强模型复测（进行中）**：GPU 被另一会话新进程占用（~4.5–4.8GB），
+   改 CPU llama-server 直启 `--device none`（qwen2.5:7b, :11435, pid 253239，
+   零 GPU 上下文——ollama serve 拦不住 Vulkan 的坑已记录）。运行参数
+   `--family chain-sort --tasks-per-family 30`（job bash-919）。**事故与
+   恢复计划**：启动命令漏设 ETL_OUT_PATH，runner 以 "w" 模式打开
+   `etl/results/logs.jsonl`，批次 2 原始 logs（90 行）被截断为 0 字节——
+   **数据无损**（git d77237d 归档含全部 6 文件，已验证 ls-tree）。恢复
+   步骤（复测完成后执行）：`mv etl/results/logs.jsonl
+   etl/results/logs_chainsort_qwen7b.jsonl` →
+   `git show d77237d:etl/results/archive_20261012_public_rules/logs.jsonl
+   > etl/results/logs.jsonl` → 对复测产物单跑 analyze（指定该文件，勿覆盖
+   table_detach.csv）。教训：后台实验的输出路径必须显式传参，不许依赖
+   默认值与环境变量猜测。

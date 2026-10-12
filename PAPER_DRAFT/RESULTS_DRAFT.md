@@ -44,6 +44,30 @@
 - 性能层面：三族语义正确率 0/197、0/204、5/213（整任务全对 0/90），属地板效应；
   本节不升任何能力 claim（登记见 `CLAIM_LEDGER.md` V-ETL-01）。
 
+## 4.2b 批次 2：规则公开后重跑（qwen2.5:3b，90 任务 / 614 步）[exploratory]
+
+事后诊断（KI-002）：批次 1 的地板是**设计属性**——公开字段不足以推导真值
+（ops/sort_rule/ptr/values 从未进 prompt），任务按构造不可解。修复：规则进
+公开 prompt、truth_chain 仍仅 validator 可见（schedules 文件哈希跨批不变），
+门禁重设计 v3→v3.1 后重跑（HANDOVER §13.16–13.17）。
+
+| family | step_acc | parse_ok | 首错步中位数 |
+|---|---|---|---|
+| chain-sort | 0.1168 | 0.1168 | 0.0 |
+| ret-path | 0.1912 | 0.1912 | 0.0 |
+| stateful-calc | 0.1174 | 0.1174 | 1.0 |
+
+（来源：`etl/results/archive_20261012_public_rules/table_detach.csv` 全表逐字；
+audit_replay 614 步 mismatch=0。）
+
+读数（只报测量，全部点估计，[exploratory]）：
+- 地板解除：三族正确率离开 0；stateful first_err_median 0→1。
+- 误差分解获得作用面：cumulative 主导（82%/76%/69%）；错后恢复 46/614，
+  恢复率梯度 ret-path 16.4% > chain-sort 8.6% > stateful 2.1%，与重锚定
+  假说方向一致（`qc/q2_q4_analysis/results.json`；相容性证据非因果）。
+- 短链外推（Q4）仍不可判：逐 k 样本 4–30，无可靠 k 趋势（R²≈0），
+  stateful 留出检验退化。
+
 ## 4.3 限制（与正文 §7 同步）
 
 - 5 seeds / 单环境（CartPole）/ 单奖励族（speed^α）；ETL 未过预注册假设检验（exploratory）。

@@ -104,3 +104,17 @@ print({k:dict(v) for k,v in f.items()})"
 > 上述最后一条是「`step_acc` 实为 `valid` 率」这一发现的复算入口：脚本 `analyze_etl.py`
 > 取 `valid` 却命名为 `step_acc`，只跑 `report_snippets.md` 会误读成准确率。
 > 交叉验证：`docs/HANDOVER.md` §13.13 L766（valid 5/614 = 0.8%、correct 0/614，2026-10-08 历史口径）。
+
+## V-ETL-02 — 批次 2（规则公开重跑）: 地板解除 + 误差分解获得作用面（exploratory）
+
+- 陈述：批次 2（qwen2.5:3b，90 任务 / 614 步，逐步规则进公开 prompt、truth_chain 仍仅 validator 可见，schedules 文件哈希跨批不变）语义正确率 chain-sort 0.1168 / ret-path 0.1912 / stateful-calc 0.1174（first_err_median 0.0/0.0/1.0）；audit 重放 614 步 mismatch=0。**全部为点估计，误差分解与恢复率梯度整节标 [exploratory]**（未预注册）。
+  - 地板解除的对照声明：批次 1（llama3.1:8b 隐藏规则）地板 5/614 的根因是任务按构造不可解（KI-002 设计属性），批次 2 证明「规则公开后通道有效」，不证明「模型能力提升」——两批模型与 prompt 双双不同，属设计修复验证，非受控比较。
+  - 误差分解读数：cumulative 主导 82%/76%/69%（154/188、133/174、114/165）；错后恢复 46/614；恢复率梯度 ret-path 16.4% > chain-sort 8.6% > stateful 2.1%，与重锚定假说**相容**（相容性证据非因果，因果降级需 mini_experiment 式双臂）。
+- 预注册出处：无（B/ETL 未预注册；`docs/internal_report_skeleton.md` [exploratory] 纪律）。
+- 判定检验：`python3 src/audit_replay.py`（对批次 2 logs）mismatch=0；恢复率梯度可用 `qc/q2_q4_analysis/analyze.py` 重算。
+- 证据指针：
+  - `etl/results/archive_20261012_public_rules/logs.jsonl`（90 行 = 批次 2 原始 logs；工作区 `etl/results/logs.jsonl` 正被 chain-sort 7B 复测占用，恢复计划见 HANDOVER §13.19）
+  - `etl/results/archive_20261012_public_rules/table_detach.csv`（0.1168/0.1912/0.1174 + first_err_median，正文 tab:etl-v2 逐字来源）
+  - `qc/q2_q4_analysis/results.json`（cumulative 占比、恢复 46/614、梯度 16.4/8.6/2.1%；Q4 逐 k 样本 4–30 不可判）
+  - `paper/main.tex` §Results (tab:etl-v2) 与 §etl-decomp；`research_numbers` 对账 PASS（2026-10-12，252 纸面数字 vs 113 数据侧，0 diff）
+- 登记：2026-10-12（批次 2 完成当晚；KI-002 → f3a32cc 规则公开 → 02ae957 门禁 v3.1 → d77237d 批次 2 落盘的全链终点）。

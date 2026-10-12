@@ -15,7 +15,7 @@
   - `goodhart-project/c2/results/table1_true_score.csv: L2-L7`（六档 mean/CI/proxy/detach；峰 444.0216，谷 −2.2205）
   - `goodhart-project/c2/results/train_config.json: L2-L24`（α/seeds/100k/λ/limit/prereg_synced=true）
   - `goodhart-project/c2_run.log: L5-L35`（30/30 完成）、`L39`（prereg_synced=True 可判读）
-  - `goodhart-project/docs/HANDOVER.md: L581-L604`（三条件核对 + 裁定 (a)）、`L606-L618`（定稿措辞）、`L625-L628`（附带条件）
+  - `goodhart-project/docs/HANDOVER.md` §13.11（行号 2026-10-12 实测）：三条件核对 + 裁定 (a) L629-L652 与 L654 起、定稿措辞 L654-L672、附带条件 L673-L678
 - 状态：**verified**（可入 §2 结果 + §2.4 定稿措辞；引用措辞必须连带第 3 条件偏离标注一起抄）
 
 ## V-ETL-01 — ETL 可复现性（verified：判分可重放；性能数字仅作方法学报告，且列名为误导性命名）
@@ -28,8 +28,8 @@
   - `goodhart-project/etl/results/logs.jsonl`：`wc -l` = 90 行 = 90 任务（stateful-calc/chain-sort/ret-path 各 30），内含 614 步（实算：`python3 -c` 逐行 `len(steps)` 求和 = 614；`model` 全 `llama3.1:8b`），抽查行段 `L1-L30` / `L31-L60` / `L61-L90` 按族排列
   - 实跑：`python3 src/audit_replay.py`（goodhart-project 根）→ `审计完成: 614 步, mismatch=0 / PASS — 判分可复现`，exit 0（2026-10-08 实测复核通过）
   - `etl/results/table_detach.csv: L1-L4`（表头 + 三行；`step_acc` = 语义正确率 0.0 / 0.0 / 0.0235，`parse_ok` = 合法率同值）
-  - **正确率实算（2026-10-08 本次重算）**：`valid` 分族 5/213（stateful-calc）、0/197（chain-sort）、0/204（ret-path），合计 5/614 = 0.8%；**正确步 0/614 = 0.0%；整任务全对 0/90**。与 `docs/HANDOVER.md: L713` 一致
-  - 地板效应边界：`first_err_median = 0.0`（三族全 0）→ 无「带病状态上继续推理」样本，误差分解本批无作用面；`docs/HANDOVER.md: L716-L721`（防两误读）、`L728-L732`（Q2/Q4 当前不可分析，出路 = 换更强模型重跑）
+  - **正确率实算（2026-10-08 本次重算）**：`valid` 分族 5/213（stateful-calc）、0/197（chain-sort）、0/204（ret-path），合计 5/614 = 0.8%；**正确步 0/614 = 0.0%；整任务全对 0/90**。与 `docs/HANDOVER.md` §13.13 L766 一致
+  - 地板效应边界：`first_err_median = 0.0`（三族全 0）→ 无「带病状态上继续推理」样本，误差分解本批无作用面；`docs/HANDOVER.md` §13.13 L768-L775（防两误读）、L776-L780（Q2/Q4 当前不可分析，出路 = 换更强模型重跑）
   - `goodhart-project/etl/results/report_snippets.md: L5-L9`（自动表）、`L11-L13`（exploratory 声明）
   - `goodhart-project/etl/results/fig_etl_curve.pdf` + `fig_error_decomp.pdf`（存在性引用）
 - 状态：**verified**（仅「管线可复现」可入正文方法/结果；性能数字只作描述性报告 + [exploratory]，禁作显著性/机制结论）
@@ -39,14 +39,14 @@
 - 陈述：salient vs blind 的 true_score 配对差 mean −0.00035（SD 0.00451），CI 与 0 不可区分；两组 steps_alive 全 500、mean_speed ≈0.107/0.108（限速 28%），罚分合计 0.007/0.008——操纵无作用面，属预注册归因 (a)。
 - 预注册出处：`goodhart-project/prereg/preregistration_q5.md: L22-L30`（H1/H2/H0）；`L48-L57`（判读 + 否证只许 (a)/(b)）。
 - 判定检验：按 seed 配对差 95% bootstrap CI（2000 次）是否含 0。
-- 证据指针：`goodhart-project/q5/results/summary_q5.csv: L1-L11`（表头 + 10 行；L2-L6 blind / L7-L11 salient）；`q5/results/train_config_q5.json: L1-L18`；`preregistration_q5.md: L67-L76`（补记）；`docs/HANDOVER.md: L647-L669`（§13.12 登记）。
+- 证据指针：`goodhart-project/q5/results/summary_q5.csv: L1-L11`（表头 + 10 行；L2-L6 blind / L7-L11 salient）；`q5/results/train_config_q5.json: L1-L18`；`preregistration_q5.md: L67-L76`（补记）；`docs/HANDOVER.md` §13.12（L686-L715，登记）。
 - 状态：**inconclusive**（null 结果；入 §4 时只写「本批无差异、归因 (a)」，禁写「可察觉性不重要」一般结论）
 
 ## I-Q5-H2 — 惩罚可见性次假设（inconclusive：形式满足、实质不成立）
 
 - 陈述：|mean_speed − limit| 配对差 −0.0013（CI [−0.0016,−0.0009] 不含 0）形式上满足冻结判据，但效应量仅为共同偏差（≈0.269）的 0.5%，两组同为过度保守而非「压线 vs 冲速」。
 - 出处/检验同 I-Q5-H1（`preregistration_q5.md: L25-L27` H2；`L50` 检验）。
-- 证据指针：同上 + `docs/HANDOVER.md: L658-L661`（双记原文）。
+- 证据指针：同上 + `docs/HANDOVER.md` §13.12（L706-L715，双记原文）。
 - 状态：**inconclusive**（如实双记；禁作行为学意义断言）
 
 ## I-B-MECH — 链式误差分解机制（TODO / exploratory；本批因地板效应**无作用面**）
@@ -55,13 +55,13 @@
 - 出处：无预注册（skeleton §3.4 明确 [exploratory]）。
 - 检验：未锁定（需先定义 single/cumulative 操作 + 预注册假设检验）。
 - ⚠️ **前置阻断（本批不可分析，2026-10-08 补记）**：`first_err_median = 0.0`（三族全 0）→ 模型在第 0 步即错，**不存在「带病状态上继续推理」的样本**；correct 0/614。故 single/cumulative 分解在本批**无作用面**，`fig_error_decomp.pdf` 是地板的形状而非机制形状。解锁需换更强模型重跑（属重跑测量、非新设计）。
-- 证据指针：`goodhart-project/etl/results/fig_error_decomp.pdf`（存在性）；`docs/internal_report_skeleton.md: L34-L37`；`docs/HANDOVER.md: L716-L721`（防两误读）、`L728-L732`（Q2/Q4 当前不可分析）；`docs/agi_question_list.md: L9-L10`（Q2/Q4 🟡 地板效应）。
+- 证据指针：`goodhart-project/etl/results/fig_error_decomp.pdf`（存在性）；`docs/internal_report_skeleton.md: L34-L37`；`docs/HANDOVER.md` §13.13 L768-L775（防两误读）、L776-L780（Q2/Q4 当前不可分析）；`docs/agi_question_list.md: L9-L10`（Q2/Q4 🟡 地板效应）。
 - 状态：**TODO**（本稿 §3.4 只给描述性图 + [exploratory] 段首标 + 地板效应警告，不写因果句）
 
 ## I-C2-H2 — α* 稳定性次假设（TODO：删失退化，不作正面证据）
 
 - 陈述：每个 seed 的 true 峰全在 α=0.5（网格最左端），α* 左删失，方差 0 属退化，不能作为 H2 正面证据。
-- 出处：`preregistration_c2.md: L37`（H2）；判读见 `docs/HANDOVER.md: L635-L636`。
+- 出处：`preregistration_c2.md: L37`（H2）；判读见 `docs/HANDOVER.md` §13.11 L684。
 - 证据指针：`c2/results/summary.csv: L2-L31`（逐 seed 峰位可重算；本账本不另算，只引退化定性）。
 - 状态：**TODO**（正文不写 H2 确认；方法 §2.5 可记一笔删失局限）
 
@@ -103,4 +103,4 @@ print({k:dict(v) for k,v in f.items()})"
 
 > 上述最后一条是「`step_acc` 实为 `valid` 率」这一发现的复算入口：脚本 `analyze_etl.py`
 > 取 `valid` 却命名为 `step_acc`，只跑 `report_snippets.md` 会误读成准确率。
-> 交叉验证：`docs/HANDOVER.md: L713`（valid 5/614 = 0.8%、correct 0/614）。
+> 交叉验证：`docs/HANDOVER.md` §13.13 L766（valid 5/614 = 0.8%、correct 0/614，2026-10-08 历史口径）。

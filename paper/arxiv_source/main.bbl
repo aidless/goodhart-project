@@ -1,0 +1,91 @@
+\begin{thebibliography}{10}
+
+\bibitem{amodei2016concrete}
+Dario Amodei, Chris Olah, Jacob Steinhardt, Paul Christiano, John Schulman, and Dan Man{\'e}.
+\newblock Concrete problems in {AI} safety, 2016.
+
+\bibitem{barto1983neuronlike}
+Andrew~G. Barto, Richard~S. Sutton, and Charles~W. Anderson.
+\newblock Neuronlike adaptive elements that can solve difficult learning control problems.
+\newblock {\em IEEE Transactions on Systems, Man, and Cybernetics}, SMC-13(5):834--846, 1983.
+
+\bibitem{campbell1979assessing}
+Donald~T. Campbell.
+\newblock Assessing the impact of planned social change.
+\newblock {\em Evaluation and Program Planning}, 2(1):67--90, 1979.
+
+\bibitem{goodhart1975problems}
+C.~A.~E. Goodhart.
+\newblock Problems of monetary management: The {UK} experience.
+\newblock In {\em Monetary Theory and Practice}, pages 91--121. Macmillan, 1984.
+\newblock Reprint of 1975 conference paper, Reserve Bank of Australia; original 1975 pagination not located. DOI 10.1007/978-1-349-17295-5\_4.
+
+\bibitem{ji2023alignment}
+Jiaming Ji, Tianyi Qiu, Boyuan Chen, Borong Zhang, Hantao Lou, Kaile Wang, Yike Duan, Zhonghao He, Victoria Lukaszewicz, Donghai Hu, Jiayi Zhou, and Yaodong Zhang.
+\newblock {AI} alignment: A comprehensive survey, 2023.
+
+\bibitem{kwa2025measuring}
+Thomas Kwa, Ben West, Joel Becker, Amy Deng, Katharyn Garcia, Max Hasin, Sami Jawhar, Megan Kinniment, Nate Rush, Sydney Von~Arx, Ryan Bloom, and Thomas Broadley.
+\newblock Measuring {AI} ability to complete long software tasks.
+\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)}, volume~38, pages 102382--102435, 2025.
+\newblock arXiv:2503.14499.
+
+\bibitem{morris2024levels}
+Meredith~Ringel Morris, Jascha Sohl-Dickstein, Noah Fiedel, Thomas Warkentin, Allan Dafoe, Aleksandra Faust, Camille Farabet, and Shane Legg.
+\newblock Levels of {AGI} for operationalizing progress on the path to {AGI}.
+\newblock In {\em International Conference on Machine Learning (ICML)}, 2024.
+\newblock Preprint 2023.
+
+\bibitem{nosek2018preregistration}
+Brian~A. Nosek, Charles~R. Ebersole, Alexander~C. DeHaven, and David~T. Mellor.
+\newblock The preregistration revolution.
+\newblock {\em Proceedings of the National Academy of Sciences}, 115(11):2600--2606, 2018.
+
+\bibitem{pan2022effects}
+Alexander Pan, Kshitij Bhatia, and Jacob Steinhardt.
+\newblock The effects of reward misspecification: Mapping and mitigating misaligned models.
+\newblock In {\em International Conference on Learning Representations (ICLR)}, 2022.
+
+\bibitem{pineau2021improving}
+Joelle Pineau, Philippe Vincent-Lamarre, Koustuv Sinha, Vincent Larivi{\`e}re, Alina Beygelzimer, Florence d'Alch{\'e} Buc, Emily~B. Fox, and Hugo Larochelle.
+\newblock Improving reproducibility in machine learning research (a report from the {NeurIPS} 2019 reproducibility program).
+\newblock {\em Journal of Machine Learning Research}, 22(164):1--20, 2021.
+\newblock Preprint 2020, arXiv:2003.12206.
+
+\bibitem{popper1963conjectures}
+Karl~R. Popper.
+\newblock {\em Conjectures and Refutations: The Growth of Scientific Knowledge}.
+\newblock Routledge, London, 1963.
+
+\bibitem{raffin2021stable}
+Antonin Raffin, Ashley Hill, Adam Gleave, Anssi Kanervisto, Maximilian Ernestus, and Noah Dormann.
+\newblock {Stable-Baselines3}: Reliable reinforcement learning implementations.
+\newblock {\em Journal of Machine Learning Research}, 22(268):1--8, 2021.
+
+\bibitem{ross2011reduction}
+St{\'e}phane Ross, Geoffrey~J. Gordon, and J.~Andrew Bagnell.
+\newblock A reduction of imitation learning and structured prediction to no-regret online learning.
+\newblock In {\em International Conference on Artificial Intelligence and Statistics (AISTATS)}, 2011.
+\newblock Preprint 2010, arXiv:1011.0686.
+
+\bibitem{sainz2024nlp}
+Oscar Sainz, Jon~Ander Campos, Iker Garc{\'i}a-Ferrero, Julen Etxaniz, Oier Lopez~de Lacalle, and Eneko Agirre.
+\newblock {NLP} evaluation in trouble: On the need to measure {LLM} data contamination for each benchmark.
+\newblock In {\em Findings of the Association for Computational Linguistics: EMNLP 2024}, 2024.
+\newblock Preprint 2023.
+
+\bibitem{schulman2017proximal}
+John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov.
+\newblock Proximal policy optimization algorithms, 2017.
+
+\bibitem{strathern1997improving}
+Marilyn Strathern.
+\newblock 'improving ratings': audit in the {British} university system.
+\newblock {\em European Review}, 5(3):305--321, 1997.
+
+\bibitem{wei2022chain}
+Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia, Ed~Chi, Quoc~V. Le, and Denny Zhou.
+\newblock Chain-of-thought prompting elicits reasoning in large language models.
+\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)}, volume~35, pages 24824--24837, 2022.
+
+\end{thebibliography}

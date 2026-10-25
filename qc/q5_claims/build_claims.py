@@ -5,7 +5,7 @@
 理由 (research-evidence-check skill): 核验工具只做数值匹配、不从原始数据重算,
 "一个错误数字只要在程序和正文里一致就会通过", 涉及结论的数字必须独立重算。
 
-用法: /home/liuzewen/.venvs/goodhart/bin/python qc/q5_claims/build_claims.py
+用法: python3 qc/q5_claims/build_claims.py   # 需 goodhart venv（见 docs/HANDOVER.md）
 """
 import csv
 import hashlib

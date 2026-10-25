@@ -61,16 +61,15 @@ goodhart-project/
 ## 快速开始
 
 ```bash
-# 本机 Debian 系 Python 3.12 启用了 PEP 668 (externally-managed-environment),
-# 直连 pip install 会被系统策略拒绝 (exit 1)。走 venv。
-#
-# 注意: venv 不能建在仓库内 —— 本仓库目录名含路径分隔符 ':'
-# (F:\deepseek), Python 3.11+ 会拒绝: "contains the PATH separator :"。
-# 故建在无冒号路径, 并用 --system-site-packages 复用系统的 CUDA torch。
-python3 -m venv --system-site-packages /home/liuzewen/.venvs/goodhart
-/home/liuzewen/.venvs/goodhart/bin/python -m pip install -r requirements.txt
+# Debian 系 Python 3.12 默认启用 PEP 668 (externally-managed-environment),
+# 直连 pip install 会被系统策略拒绝 (exit 1)。走 venv:
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
 # 跑训练/脚本时用该 venv 的解释器:
-#   /home/liuzewen/.venvs/goodhart/bin/python src/train_c2.py
+#   .venv/bin/python src/train_c2.py
+#
+# 如需复用系统 site-packages (例如已装好的 CUDA 版 torch), 建议加
+# --system-site-packages 并把 venv 建在仓库外。
 
 # 解释器默认 python3; 若你的环境只有 python, 用:
 #   PYTHON=python bash run_all.sh

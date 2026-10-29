@@ -14,8 +14,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       # The suite drives src/*.py --selftest subprocesses, which import the
-      # plotting/analysis stack. Naming it here rather than installing all of
-      # requirements.txt keeps torch and stable-baselines3 (never imported by
-      # the tests) out of this job.
-      - run: python -m pip install pytest numpy pandas matplotlib gymnasium
+      # plotting/analysis stack (numpy, pandas, matplotlib, gymnasium, dotenv).
+      # Take requirements.txt so a future dependency cannot silently break this
+      # job again, but drop torch and stable-baselines3: only train_*.py imports
+      # them and no test reaches those.
+      - run: |
+          python -m pip install --upgrade pip
+          grep -viE '^(torch|stable-baselines3)' requirements.txt > "$RUNNER_TEMP/ci-requirements.txt"
+          python -m pip install -r "$RUNNER_TEMP/ci-requirements.txt"
+          python -m pip install pytest
       - run: python -m pytest tests -q

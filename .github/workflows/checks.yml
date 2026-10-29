@@ -13,5 +13,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: python -m pip install pytest
+      # The suite drives src/*.py --selftest subprocesses, which import the
+      # plotting/analysis stack. Naming it here rather than installing all of
+      # requirements.txt keeps torch and stable-baselines3 (never imported by
+      # the tests) out of this job.
+      - run: python -m pip install pytest numpy pandas matplotlib gymnasium
       - run: python -m pytest tests -q

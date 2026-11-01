@@ -1,6 +1,27 @@
 # Goodhart 脱钩与链式任务测量
 
-两个实验的工程骨架：**C.2**（Goodhart 脱钩，CartPole + PPO，真实目标 vs 代理目标）与 **B**（链式任务 ETL 与误差分解）。
+> **这个项目解决什么问题**：把「代理目标与真实目标脱钩」与「链式任务中错误如何累积」
+> 从口头论点变成**可测量、可复算、可审计**的证据。前者用 CartPole + PPO 做控制实验
+> （真实目标 vs 代理目标，预注册判据），后者用 90 个链式任务 + 614 步真实 LLM 调用
+> 测语义正确率与误差分解。两者共享一条纪律：**数字必须能重算，证据链必须闭合**。
+
+**为什么重要**：Goodhart 定律与链式任务可靠性是 AI 对齐与智能体可靠性的核心争论，
+但多数讨论停在直觉层面。这里用可复现实验 + fail-closed 门禁把「脱钩发生了」与
+「错误会累积」变成可被审计的 claim，而不是断言。
+
+**结果（摘要）**：
+- **C.2（脱钩）**：按预注册判据记录为「脱钩确认」——α=1.0 处真实得分降至 −2.22
+  （95% CI [−4.52, 0.08]）而代理得分升至峰值 1.376，脱钩比 1.005（`c2/results/table1_true_score.csv`）。
+  第 3 条件字面条款未满足（代理峰值后回落），已在论文正文与局限中显式标注，非隐藏。
+- **B（链式任务）**：首批（隐藏规则）落在**地板**（correct 0/614）；诊断为**任务设计属性**而非模型能力；
+  规则公开 + 换模型重跑后地板解除——step_acc ret-path 0.1912 / stateful-calc 0.1174 / chain-sort 0.1168
+  （`etl/results/archive_20261012_public_rules/table_detach.csv`），`audit_replay` 614 步 mismatch=0。
+  误差分解得作用面：cumulative 主导（stateful 82% / chain-sort 76% / ret-path 69%），
+  错后恢复 46/614，梯度 16.4/8.6/2.1% 与重锚定假说**相容**（探索性，非因果）。
+
+**边界（先说结论，细则见文末「证明什么 / 不证明什么」）**：C.2 是**单环境单算法**的控制实验，
+不证明 Goodhart 定律普遍成立；B 是**单模型单跑（n=90）**，全部点估计标 [exploratory]，
+不构成模型能力因果结论。
 
 ## 目录结构
 
@@ -97,3 +118,66 @@ bash run_all.sh
 
 - `etl/data/schedules/schedules.pkl` 不入库（防 git 通道泄漏真值），只留 `SHA256.txt` 锚点。
   见 `.gitignore`。
+
+## 证明什么 / 不证明什么
+
+**证明（全部可复算，见下节）**
+
+- **C.2 脱钩发生且可判读**：预注册判据下，真实得分在代理峰值处崩溃（α=1.0 → −2.22
+  [−4.52, 0.08]），脱钩比 1.005；30/30 组合跑满（6 档 α × 5 seeds × 100k 步）。
+- **C.2 的崩溃主要是生存骤降**：90.3% 的真实得分塌缩来自生存步数下降（500.0 → 97.0 步），
+  不是超速惩罚项（9.7%）——所以反转是真实的，但**不能**归因于速度奖励扭曲单独。
+- **B 链式任务管线端到端闭合**：90 任务 / 614 步，`audit_replay` 重放 mismatch=0（判分可复现）。
+- **B 的地板是设计属性而非模型能力**：由迷你实验（KI-002）定位；规则公开后地板解除
+  （ret-path 0.1912 / stateful-calc 0.1174 / chain-sort 0.1168）。
+- **门禁 fail-closed 且带 RED 反证**：`leak_check.py` 三族泄漏门禁有 `--selftest`，
+  注入违规必须判 LEAK（实测 25% 泄漏者判 LEAK，500 随机种子 500/500）。
+
+**不证明（边界，勿过度解读）**
+
+- C.2 **不证明 Goodhart 定律普遍成立**：单环境（CartPole）、单算法（PPO）、单代理目标。
+  换环境/算法/目标需要重跑，不能外推。
+- C.2 **不证明超速惩罚与反转的因果**：生存骤降主导（90.3%），超速项仅 9.7%，
+  二者在观测数据上不分离——这是记录的事实，不是速度扭曲单独致反转的证据。
+- B **不证明「规则公开提升正确率」的因果**：v2 同时换了模型（llama3.1:8b→qwen2.5:3b）与规则可见性，
+  两因子一起动，提升**不能**归因于规则公开单独。chain-sort 0.1168 与迷你实验 P 臂 0/12 不一致，
+  需强模型复测才能归因，不得据此推翻。
+- B **全部是单模型单跑点估计**（n=90），标 [exploratory]：Q2 恢复梯度、Q4 短链外推
+  都只是**相容性/现象学证据，非因果**。Q4 本批不可判（逐 k 样本仅 4–30，chain-sort R²≈0）。
+- **不做模型横向比较**：不同模型（3b/7b/8b）在不同批次的数字不可直接比较，
+  除非控制配置与规则可见性。
+
+## 复算
+
+所有数字都能从仓库内文件重取，命令如下（在仓库根目录，用 `goodhart` venv 解释器）：
+
+```bash
+V=/home/liuzewen/.venvs/goodhart/bin/python   # 或用你环境里的解释器
+
+# C.2 表1：真实/代理得分、脱钩比（6 档 α）
+$V -c "import csv; print(list(csv.DictReader(open('c2/results/table1_true_score.csv'))))"
+
+# C.2 生存/速度分解：90.3% vs 9.7%（预注册要求的两分量）
+# 来源 summary.csv 的 steps_alive / mean_speed 列；论文正文给出 500.0→97.0 步
+$V -c "import csv; rows=list(csv.DictReader(open('c2/results/summary.csv'))); print(len(rows),'rows')"
+
+# B 全量 ETL：614 步、valid/correct 计数、分族 step_acc（从 archive 表逐字取）
+$V -c "
+import json
+tot=0
+for line in open('etl/results/logs.jsonl'):
+    line=line.strip()
+    if line:
+        tot+=len(json.loads(line)['steps'])
+print('steps=',tot)"
+cat etl/results/archive_20261012_public_rules/table_detach.csv
+
+# B 判分可复现：重放判分，mismatch 必须为 0（默认日志 logs.jsonl）
+$V src/audit_replay.py            # 期望输出「614 步, mismatch=0」「PASS — 判分可复现」
+
+# 门禁 RED 反证：注入 25% 泄漏者必须判 LEAK
+$V src/leak_check.py --selftest
+```
+
+**证据链纪律**：`logs.jsonl` 的 `raw` 字段是逐字原文（禁止转述）；`schedules.pkl` 不入库
+（真值只存 SHA256 锚点），杜绝 git 通道泄漏。重算不一致 = 该数字不可信，按 AGENTS.md 铁律 1 阻塞。

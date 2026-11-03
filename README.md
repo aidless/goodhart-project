@@ -2,6 +2,10 @@
 
 两个实验的工程骨架：**C.2**（Goodhart 脱钩，CartPole + PPO，真实目标 vs 代理目标）与 **B**（链式任务 ETL 与误差分解）。
 
+**验证过什么**：C.2 已按预注册跑满 30/30（6 档 α × 5 seeds × 100k 步），真实分在 α=0.5 达峰 444.0（CI [431.9,456.1]）后跌 86.6%–100.5%，α=1.0 档代理最大 (1.376) 而真实崩至 −2.2，判定「确认脱钩」。ETL 判分重放 614 步 mismatch=0。每条 claim 的证据指针与状态见 `CLAIM_LEDGER.md`。
+
+**怎么跑**：`python3 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt && bash run_all.sh`（只覆盖 B 管线；C.2 训练需另跑 `src/train_c2.py`）。
+
 ## 目录结构
 
 ```

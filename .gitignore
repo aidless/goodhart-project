@@ -11,7 +11,8 @@ __pycache__/
 /c2_run.log
 /q5_run.log
 
-# 生成的结果 (可由 run_all.sh 重现)
+# 本地重算目录。C.2 的已提交 summary 在 report/data/，不在这里。
+# run_all.sh 会把表和图写到 c2/results/，那不是一次新的训练。
 c2/results/
 q5/results/
 
@@ -62,9 +63,16 @@ build/
 *.egg-info/
 .DS_Store
 *.log
-data/
-models/
+/data/
+/models/
 .regression_tmp/
 *.bak
 
 *.bak*
+
+# *.log 会重新忽略证据日志。例外必须写在 *.log 之后。
+!c2_run.log
+!q5_run.log
+!etl/results/*.log
+!etl/results/**/*.log
+

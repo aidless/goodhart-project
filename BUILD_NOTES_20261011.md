@@ -17,7 +17,7 @@ Reproduce with:
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"     # TinyTeX
-cd goodhart-project/paper
+cd paper
 pdflatex -interaction=nonstopmode main.tex && bibtex main && \
 pdflatex -interaction=nonstopmode main.tex && \
 pdflatex -interaction=nonstopmode main.tex

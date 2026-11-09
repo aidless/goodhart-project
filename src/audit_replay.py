@@ -3,7 +3,8 @@ import json
 import sys
 from validators import Validator, classify_error
 
-def main(logs="etl/results/logs.jsonl"):
+def replay(logs="etl/results/logs.jsonl"):
+    """重放一份 logs。返回 (步数, mismatch 数)。文件不存在则抛 FileNotFoundError。"""
     validator = Validator()
     mismatches = 0
     total_steps = 0
@@ -24,6 +25,15 @@ def main(logs="etl/results/logs.jsonl"):
                           f"logged=({h['valid']},{h['err_type']}) "
                           f"replay=({re_valid},{re_err})")
                 prev_valid = re_valid
+    return total_steps, mismatches
+
+def main(logs="etl/results/logs.jsonl"):
+    try:
+        total_steps, mismatches = replay(logs)
+    except FileNotFoundError:
+        print(f"找不到 {logs}。已提交的批次在 etl/results/archive_*/logs.jsonl。"
+              "工作副本 etl/results/logs.jsonl 不入库。")
+        sys.exit(2)
 
     print(f"审计完成: {total_steps} 步, mismatch={mismatches}")
     if mismatches > 0:

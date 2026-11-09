@@ -2,6 +2,8 @@
 
 > 状态：初稿（2026-10-09）。**本稿每个数字后都带证据指针**；无指针的句子不得进入投稿稿。
 > 不 git add/commit/push；不编造数字；结论不超过数字支撑的范围。
+>
+> 2026-11-09：`c2/results/` 与 `q5/results/` 不在 git 里。C.2 已提交表是 `report/data/summary.csv` 与 `report/data/table1_true_score.csv`。Q5 原始 summary 缺失。下面的旧路径保留。
 
 ## 4.1 CartPole 速度奖励失真下的代理–真实脱钩（C.2）
 

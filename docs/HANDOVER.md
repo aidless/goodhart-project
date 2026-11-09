@@ -765,6 +765,8 @@ table_detach + report_snippets）。
 
 步级合计：valid 5/614（0.8%），**correct 0/614**，err_type 标注 609 步。
 
+**更正（2026-11-09，上一句保留）**：日志里没有 `ok` 字段。把缺失键当成「correct」会得到 0。已提交 `etl/results/archive_20261008_hidden_rules/logs.jsonl` 上 `audit_replay` mismatch=0，`valid` 与 `Validator.check_step` 是同一个谓词，语义正确率是 **5/614**（stateful-calc 5/213，另两族 0）。`paper/main.tex` 写的是 5/614。
+
 **如实边界（防两误读）**：
 1. **地板效应**：模型在第 0 步就几乎全错（first_err_median=0），不存在
    "带病状态上继续推理"的样本——**误差分解（single vs cumulative）在本批

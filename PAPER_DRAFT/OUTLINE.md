@@ -1,8 +1,10 @@
 # PAPER_DRAFT / OUTLINE — Goodhart 脱钩与链式任务测量（草稿，未投稿）
 
 > 状态：开稿草稿（2026-10-08）。数字一律来自落盘证据，禁止手抄/外推。
-> 仓库内相对路径：`goodhart-project/PAPER_DRAFT/OUTLINE.md`；账本见 `goodhart-project/CLAIM_LEDGER.md`。
+> 仓库内相对路径：`PAPER_DRAFT/OUTLINE.md`；账本见 `CLAIM_LEDGER.md`。
 > 不 git add/commit/push。
+>
+> 2026-11-09：下文里的 `c2/results/`、`q5/results/`、`etl/results/logs.jsonl` 不在 git 里。已提交的 C.2 summary 是 `report/data/summary.csv`（sha256 与 `c2_run.log` 相同）。批次 1 logs 在 `etl/results/archive_20261008_hidden_rules/logs.jsonl`。Q5 原始 summary 缺失，配对差见 `qc/q5_claims/evidence/`。旧路径保留，不表示文件还在。
 
 ## 候选标题（1 个主标题 + 1 个备用）
 
@@ -22,9 +24,9 @@
 
 - 写什么：测量/代理两条裂缝各 2 句 + 1 例；声明本稿只处理代理裂缝（C.2）+ 测量裂缝（B/ETL），不可证伪裂缝留给 Q3 文档。
 - 证据指针（框架，不产数字）：
-  - `goodhart-project/docs/internal_report_skeleton.md: L15-L17`（三裂缝分工：只处理前两条）
-  - `goodhart-project/docs/agi_question_list.md: L6-L12`（Q1 代理/Q2·Q4 测量活跃队列；Q3 纯写作）
-  - `goodhart-project/prereg/citation_verification.csv`（**17/17 已填实、0 留空**（2026-10-11 复核；此处原写"13 填实/4 留空"已过期）；`zotero_key` 17 行仍未核，见 `docs/HANDOVER.md` §13.4）
+  - `docs/internal_report_skeleton.md: L15-L17`（三裂缝分工：只处理前两条）
+  - `docs/agi_question_list.md: L6-L12`（Q1 代理/Q2·Q4 测量活跃队列；Q3 纯写作）
+  - `prereg/citation_verification.csv`（**17/17 已填实、0 留空**（2026-10-11 复核；此处原写"13 填实/4 留空"已过期）；`zotero_key` 17 行仍未核，见 `docs/HANDOVER.md` §13.4）
 
 ### §2 C.2 Goodhart 脱钩实验（≈1700 字；对应 skeleton §2）
 
@@ -35,14 +37,14 @@
   - 2.4 讨论：三档措辞不越档；本批记「确认脱钩」+ 第 3 条件字面偏离标注（定稿措辞照抄 HANDOVER §13.11）。
   - 2.5 限制：天花板/未调参/5 seeds 功效（实测 SD 15–16 < 44.6 上限，实际功效 ≈1.0，但只覆盖本判据）。
 - 证据指针（行号均为当前落盘实测）：
-  - 预注册假设/变量：`goodhart-project/prereg/preregistration_c2.md: L33-L37`（H1/H0/H2）；`L42-L48`（真/代理/speed/α 网格/控制）；`L50`（冻结 λ=1.0 / limit=0.376 / 100k）
+  - 预注册假设/变量：`prereg/preregistration_c2.md: L33-L37`（H1/H0/H2）；`L42-L48`（真/代理/speed/α 网格/控制）；`L50`（冻结 λ=1.0 / limit=0.376 / 100k）
   - 判读规则：`preregistration_c2.md: L63-L68`（detach 定义 + 三档）；`L72-L76`（强制附带）；`L81-L86`（功效实算 SD ≤44.6）；`L88-L98`（跑后补记：配对差 446.2±15.1 / 432.7±16.0，sha 见 L96-L97）
-  - 训练完成：`goodhart-project/c2_run.log: L5-L34`（30 次 `[run]`）；`L35`（写入 30 行）；`L36`（sha256 = 58b64fc8…192c31）；`L39`（prereg_synced=True）
-  - 原始曲线：`goodhart-project/c2/results/summary.csv: L1`（表头）；`L2-L6`（α=0.5，steps_alive 全 500.0）；`L7-L11`（α=1.0，true 全 ≤1.65，proxy 全 ≥1.33）；`L12-L16`（α=1.5）；`L17-L21`（α=2.0）；`L22-L26`（α=2.5）；`L27-L31`（α=3.0）；共 31 行 = 表头 + 30 行
-  - 聚合表：`goodhart-project/c2/results/table1_true_score.csv: L1`（表头）；`L2`（0.5: 444.0216 [431.894,456.149] proxy 0.6429 detach 0.0）；`L3`（1.0: −2.2205 [−4.519,0.081] proxy 1.3762 detach 1.005）；`L4`（1.5: 39.4061 [31.392,46.777]）；`L5`（2.0: 59.4365 [47.910,71.084]）；`L6`（2.5: 21.3227 [16.043,30.021]）；`L7`（3.0: 11.341 [10.459,12.472]）
-  - 配置：`goodhart-project/c2/results/train_config.json: L2-L9`（α 网格）；`L10-L16`（seeds 42–46）；`L17-L19`（100000/1.0/0.376）；`L24`（prereg_synced true）；`L25`（训练 dense `speed^α` vs 报告 `mean(speed)^α` 偏离声明）
-  - 图：`goodhart-project/c2/results/fig1_detach_curve.pdf`（analyze_c2 产物，二进制，只引存在性）
-  - 判读裁定与定稿措辞：`goodhart-project/docs/HANDOVER.md` §13.11（行号 2026-10-12 实测）：表 1 六档数据 L619-L628；三条件逐条核对 L629-L652（条件 1/2 满足，条件 3 字面不满足、意图满足）；裁定 (a) 确认脱钩理由 + 报告 2.4 定稿措辞（可直接抄入）L654-L672；附带条件 L673-L678；exploratory：非单调/H2 删失，禁作结论 L679-L685
+  - 训练完成：`c2_run.log: L5-L34`（30 次 `[run]`）；`L35`（写入 30 行）；`L36`（sha256 = 58b64fc8…192c31）；`L39`（prereg_synced=True）
+  - 原始曲线：`c2/results/summary.csv: L1`（表头）；`L2-L6`（α=0.5，steps_alive 全 500.0）；`L7-L11`（α=1.0，true 全 ≤1.65，proxy 全 ≥1.33）；`L12-L16`（α=1.5）；`L17-L21`（α=2.0）；`L22-L26`（α=2.5）；`L27-L31`（α=3.0）；共 31 行 = 表头 + 30 行
+  - 聚合表：`c2/results/table1_true_score.csv: L1`（表头）；`L2`（0.5: 444.0216 [431.894,456.149] proxy 0.6429 detach 0.0）；`L3`（1.0: −2.2205 [−4.519,0.081] proxy 1.3762 detach 1.005）；`L4`（1.5: 39.4061 [31.392,46.777]）；`L5`（2.0: 59.4365 [47.910,71.084]）；`L6`（2.5: 21.3227 [16.043,30.021]）；`L7`（3.0: 11.341 [10.459,12.472]）
+  - 配置：`c2/results/train_config.json: L2-L9`（α 网格）；`L10-L16`（seeds 42–46）；`L17-L19`（100000/1.0/0.376）；`L24`（prereg_synced true）；`L25`（训练 dense `speed^α` vs 报告 `mean(speed)^α` 偏离声明）
+  - 图：`c2/results/fig1_detach_curve.pdf`（analyze_c2 产物，二进制，只引存在性）
+  - 判读裁定与定稿措辞：`docs/HANDOVER.md` §13.11（行号 2026-10-12 实测）：表 1 六档数据 L619-L628；三条件逐条核对 L629-L652（条件 1/2 满足，条件 3 字面不满足、意图满足）；裁定 (a) 确认脱钩理由 + 报告 2.4 定稿措辞（可直接抄入）L654-L672；附带条件 L673-L678；exploratory：非单调/H2 删失，禁作结论 L679-L685
 
 ### §3 B/ETL 链式任务与误差分解（≈2200 字；对应 skeleton §3）
 
@@ -53,22 +55,22 @@
   - 3.4 [exploratory] 误差分解：single vs cumulative；cumulative 随 k 上升 vs 被压平（疑似作弊恢复）——本节最有原创性但**未经预注册**，段首强制标 [exploratory]。⚠️ 且本批**地板效应**：`first_err_median = 0.0`（三族全 0）= 模型几乎在第 0 步就错，不存在「带病状态上继续推理」的样本 → single/cumulative 分解**在本批无作用面**，`fig_error_decomp.pdf` 的曲线是**地板的形状、不是机制的形状**，本节不得作机制解读（`docs/HANDOVER.md` §13.13，L768-L775）。
   - 3.5 限制：validator 覆盖度 / 仅三族 / 模型版本注明（llama3.1:8b）/ **地板效应导致 Q2（作弊恢复触发条件）与 Q4（短链外推长链）当前不可分析**——出路是换更强模型重跑（属重跑测量，非新设计），见 `docs/HANDOVER.md` §13.13（L776-L780）与 `docs/agi_question_list.md: L9-L10`。
 - 证据指针：
-  - 原始记录：`goodhart-project/etl/results/logs.jsonl`：共 90 行（`wc -l` = 90；`stateful-calc` 30 + `chain-sort` 30 + `ret-path` 30），合计 614 步，`model` 全为 `llama3.1:8b`（实算命令见账本 V-ETL-02；抽查 `L1-L30` 为 stateful-calc、`L31-L60` 为 chain-sort、`L61-L90` 为 ret-path）
-  - 可复现性：`goodhart-project/src/audit_replay.py` 实跑输出 `审计完成: 614 步, mismatch=0 / PASS — 判分可复现`（exit 0；2026-10-08 实测复核通过）
-  - 门禁真实跑（非 stub）：`goodhart-project/etl/results/gate_run.log: L1-L5`（非空，328 字节）——`model=llama3.1:8b`、`n_per_family=20` 全量、三族均 CLEAN、`GATE: PASS — 可启动 run_etl`、`EXIT=0`；⚠️ 三族 CLEAN 是因为**实测准确率为 0**（stateful-calc 0/20、chain-sort 0/20、ret-path 0/20）而非能力达标，引用时必须写明，不得读成「模型通过门禁能力线」。对应 `docs/HANDOVER.md` §13.13 接入方式（L732-L736）：`src/ollama_model.py` → 本地 Ollama `/v1/chat/completions`，temperature=0、timeout 60s、失败重试 1 次后 `__UNTESTED__`，`leak_check` 计 failed 且全失败仍 GATE FAIL = fail-closed 语义在真实接口下保持）；三族门禁实测表（L747-L749）
-  - 聚合表：`goodhart-project/etl/results/table_detach.csv`（表头 `model,family,step_acc,parse_ok,first_err_median`）：chain-sort 0.0/0.0、ret-path 0.0/0.0、stateful-calc **0.0235/0.0235**（`step_acc` = 语义正确率已修复，见 3.3）
+  - 原始记录：`etl/results/logs.jsonl`：共 90 行（`wc -l` = 90；`stateful-calc` 30 + `chain-sort` 30 + `ret-path` 30），合计 614 步，`model` 全为 `llama3.1:8b`（实算命令见账本 V-ETL-02；抽查 `L1-L30` 为 stateful-calc、`L31-L60` 为 chain-sort、`L61-L90` 为 ret-path）
+  - 可复现性：`src/audit_replay.py` 实跑输出 `审计完成: 614 步, mismatch=0 / PASS — 判分可复现`（exit 0；2026-10-08 实测复核通过）
+  - 门禁真实跑（非 stub）：`etl/results/gate_run.log: L1-L5`（非空，328 字节）——`model=llama3.1:8b`、`n_per_family=20` 全量、三族均 CLEAN、`GATE: PASS — 可启动 run_etl`、`EXIT=0`；⚠️ 三族 CLEAN 是因为**实测准确率为 0**（stateful-calc 0/20、chain-sort 0/20、ret-path 0/20）而非能力达标，引用时必须写明，不得读成「模型通过门禁能力线」。对应 `docs/HANDOVER.md` §13.13 接入方式（L732-L736）：`src/ollama_model.py` → 本地 Ollama `/v1/chat/completions`，temperature=0、timeout 60s、失败重试 1 次后 `__UNTESTED__`，`leak_check` 计 failed 且全失败仍 GATE FAIL = fail-closed 语义在真实接口下保持）；三族门禁实测表（L747-L749）
+  - 聚合表：`etl/results/table_detach.csv`（表头 `model,family,step_acc,parse_ok,first_err_median`）：chain-sort 0.0/0.0、ret-path 0.0/0.0、stateful-calc **0.0235/0.0235**（`step_acc` = 语义正确率已修复，见 3.3）
   - ~~**正确率实算（本次新增，直接从 logs.jsonl 重算）**：`valid` 计数 stateful-calc 5/213 = 0.0235、chain-sort 0/197、ret-path 0/204 → 合计 valid 5/614 = 0.8%；**正确步 0/614 = 0.0%；整任务全对 0/90**。与 `docs/HANDOVER.md: L713`（"步级合计：valid 5/614（0.8%），correct 0/614"）一致~~ **已 superseded**：上条系旧口径误读；真值判分后 stateful-calc 正确 5/213（合计 5/614），`RESULTS_DRAFT.md` §4.2 为准。`HANDOVER.md: L713` 为历史会话记录，不改（与新表矛盾处以新表为准）。
-  - 自动片段：`goodhart-project/etl/results/report_snippets.md`（三行表已与新口径一致；`L11-L13` exploratory + 未经预注册警告）
-  - 图：`goodhart-project/etl/results/fig_etl_curve.pdf` + `fig_error_decomp.pdf`（analyze_etl 产物，只引存在性）
-  - 任务/真值隔离：`goodhart-project/etl/data/tasks/tasks.jsonl`（公开任务，无真值）；`etl/data/schedules/SHA256.txt`（锚点 `6c78350d…`）；门禁三处结清见 `docs/HANDOVER.md` §13.10（L501-L610）：chain-sort 不可判别/ stub 冒烟 T1–T4 / schedules fail-closed 修法）
+  - 自动片段：`etl/results/report_snippets.md`（三行表已与新口径一致；`L11-L13` exploratory + 未经预注册警告）
+  - 图：`etl/results/fig_etl_curve.pdf` + `fig_error_decomp.pdf`（analyze_etl 产物，只引存在性）
+  - 任务/真值隔离：`etl/data/tasks/tasks.jsonl`（公开任务，无真值）；`etl/data/schedules/SHA256.txt`（锚点 `6c78350d…`）；门禁三处结清见 `docs/HANDOVER.md` §13.10（L501-L610）：chain-sort 不可判别/ stub 冒烟 T1–T4 / schedules fail-closed 修法）
   - 报告纪律：`docs/internal_report_skeleton.md: L28-L38`（§3 结构 + [exploratory] 强制标 + 数字只准来自脚本）
 
 ### §4 结论、限制与下一步（≈400–600 字；对应 skeleton §5–§6）
 
 - 写什么：三裂缝触及/空白；只列一个下一步（C.2 确认脱钩 → Q5 已跑完但 null（归因 (a)）；**Q6 已于 2026-10-08 由作者拍板解冻**，但解冻 ≠ 自动开工，需全新任务设计、另立项防「第二个计划过载」；ETL 低准确率只作方法学报告，不升 claim）。
 - 证据指针：
-  - Q5 已跑完（null 亦是数据）：`goodhart-project/q5/results/summary_q5.csv: L1`（表头）+ `L2-L6`（blind 5 seeds，true ≈499.99，steps_alive 全 500.0，mean_speed ≈0.107）+ `L7-L11`（salient 同量级）；`q5/results/train_config_q5.json: L1-L18`（2 arm × 5 seeds × 100k，prereg_synced true）
-  - Q5 预注册/判读：`goodhart-project/prereg/preregistration_q5.md: L22-L30`（H1/H2/H0）；`L48-L54`（判读 + 否证只许归因 (a)/(b)）；`L67-L76`（补记：配对差 −0.00035±0.00451，罚分合计 0.007/0.008，归因 (a)，sha L74-L75）
+  - Q5 已跑完（null 亦是数据）：`q5/results/summary_q5.csv: L1`（表头）+ `L2-L6`（blind 5 seeds，true ≈499.99，steps_alive 全 500.0，mean_speed ≈0.107）+ `L7-L11`（salient 同量级）；`q5/results/train_config_q5.json: L1-L18`（2 arm × 5 seeds × 100k，prereg_synced true）
+  - Q5 预注册/判读：`prereg/preregistration_q5.md: L22-L30`（H1/H2/H0）；`L48-L54`（判读 + 否证只许归因 (a)/(b)）；`L67-L76`（补记：配对差 −0.00035±0.00451，罚分合计 0.007/0.008，归因 (a)，sha L74-L75）
   - Q5 判读登记：`docs/HANDOVER.md` §13.12（L686-L715：H1 未确认、H2 形式满足实质不成立、归因 (a) 成立、禁外推）；§13.12（L726-L727：Q6 解冻条件已满足、当时**待作者决定**——见下）；§13.13（L781-L783，**以本条为准**：Q6 作者已拍板解冻，解冻 = 允许立项设计 ≠ 自动开工，为防计划过载设计另立项、不并入现有线）；§13.13（L776-L780：Q2/Q4 当前不可分析——本批 correct=0 无部分正确步可分解，出路是换更强模型重跑而非新设计）
   - AGI 清单：`docs/agi_question_list.md: L8`（Q1 ✅ 已产出）；`L12`（Q5 ✅）；`L9-L10`（Q2/Q4 🟡 地板效应 correct 0/614，当前不可分析）；`L17`（Q6 **🔓 已解冻 2026-10-08，作者拍板**）；`L26`（Q6 违纪线：未解冻前「顺手先做一点」即违纪）
   - 结论纪律：`docs/internal_report_skeleton.md: L49-L53`（下一步只列一个）；`L4-L8`（写作纪律：禁手抄/禁越档/引用待核）

@@ -1,12 +1,9 @@
-"""门禁链第 3–5 步的**基础设施冒烟测试** (确定性 stub, 非模型测量)。
+"""门禁链的基础设施冒烟测试 (确定性 stub, 非模型测量)。
 
-背景: `run_all.sh` 在门禁处 fail-closed 中止, 因为 `run_etl.py` 的
-`model_call` 仍是占位实现 —— 于是 run_etl / audit_replay / analyze_etl
-这三步从未在真实数据上跑过。环境里也没有任何 LLM 凭据, 无法接入真实模型。
-
-本脚本用**确定性 stub** 把这三步的数据契约打通, 并验证门禁的 fail-closed
-行为。它证明的是「管线能跑、契约能对上」, **不是**「模型行为如何」。
-所有产物写到临时目录, 绝不碰 etl/results/ 的正式结果。
+证明三件事: 调用全失败必须 fail-closed; 对诱饵 prompt 吐原始真值必须判 LEAK;
+stub 日志重放必须 mismatch=0。产物只写临时目录, 不进入 etl/results/ 归档。
+这不是模型测量。已提交的模型跑批在 etl/results/archive_*/ 和
+etl/results/logs_chainsort_*.jsonl, 由 audit_replay 与 drift_check 覆盖。
 
 用法: python3 src/smoke_gate_chain.py
 退出码 0 = 全部通过。

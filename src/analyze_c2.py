@@ -5,6 +5,9 @@
 import matplotlib
 matplotlib.use("Agg")
 import _plot_style  # noqa: F401  导入即生效: CJK 探测 + unicode_minus
+import os
+import sys
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -110,16 +113,26 @@ def verdict(out_df):
     else:
         v = "否证 (true_score 全区间单调不减)"
     print(f"判读: {v}  [峰后跌幅 {drop:.1%}]")
-    print("⚠️ 以上为点估计; 正式判读须同时检查 CI 是否含 0, 见预注册第3节。")
+    print("⚠️ 以上只是 true_score 跌幅的点估计。")
+    print("⚠️ 预注册第3节还要求差异的 95% CI 不含 0, 且 proxy 在达峰后继续上升或持平。")
+    print("⚠️ 本函数不检查这两条。α=1.0 的 proxy 是全程最大、其后回落, 第3条字面不满足。")
     return v
 
-def main():
-    df = load_summary()
+def main(argv=None):
+    argv = list(sys.argv[1:] if argv is None else argv)
+    summary = argv[0] if len(argv) >= 1 else "c2/results/summary.csv"
+    out_dir = argv[1] if len(argv) >= 2 else "c2/results"
+    if not os.path.exists(summary):
+        print(f"找不到 {summary}。已提交副本是 report/data/summary.csv。"
+              "本脚本只重算汇总表, 不训练。", file=sys.stderr)
+        sys.exit(2)
+    os.makedirs(out_dir, exist_ok=True)
+    df = load_summary(summary)
     agg_df = aggregate(df)
-    fig1_detach_curve(agg_df)
-    out_df = table1_true_score(agg_df)
+    fig1_detach_curve(agg_df, out=os.path.join(out_dir, "fig1_detach_curve.pdf"))
+    out_df = table1_true_score(agg_df, out=os.path.join(out_dir, "table1_true_score.csv"))
     verdict(out_df)
-    print("Done: fig1_detach_curve.pdf, table1_true_score.csv")
+    print(f"Done: {out_dir}/fig1_detach_curve.pdf, {out_dir}/table1_true_score.csv")
 
 if __name__ == "__main__":
     main()

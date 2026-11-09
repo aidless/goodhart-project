@@ -1,10 +1,10 @@
 """A2: ETL 分析管线 (含容错字段读取)。产出图2/图3/表2。
 数据源: etl/results/logs.jsonl
 
-2026-10-08 修复: step_acc 口径缺陷。
-  原缺陷: step_acc 读的是 valid (JSON 合法率), 不是语义正确率。
-  修复: 用 Validator.check_step() 对每步重新判分, 得到真正的 correct。
-  区分: parse_ok (JSON 可解析) vs correct (语义正确, 经真值判分)。
+step_acc 用 Validator.check_step() 重判, 是语义正确率。
+parse_ok 拷贝日志里的 valid 位。已提交 logs 上 audit_replay
+mismatch=0, 所以 valid 与 check_step 是同一个谓词, parse_ok
+不是单独测量的 JSON 合法率。列名是历史遗留。
 """
 import json
 import matplotlib
@@ -76,7 +76,7 @@ def etl_curve(df, out="etl/results/fig_etl_curve.pdf"):
         curve_correct = sub.groupby("k")["correct"].mean()
         curve_parse = sub.groupby("k")["parse_ok"].mean()
         ax.plot(curve_correct.index, curve_correct.values, marker="o", label="correct (语义)")
-        ax.plot(curve_parse.index, curve_parse.values, marker="s", linestyle="--", label="parse_ok (合法)")
+        ax.plot(curve_parse.index, curve_parse.values, marker="s", linestyle="--", label="logged valid")
         ax.set_title(fam)
         ax.set_xlabel("step k")
         if ax is axes[0]:
@@ -145,23 +145,38 @@ def report_snippets(tbl, path="etl/results/report_snippets.md"):
     for _, r in tbl.iterrows():
         lines.append(f"| {r['model']} | {r['family']} | {r['step_acc']} | {r['parse_ok']} | {r['first_err_median']} |")
     lines.append("")
-    lines.append("> step_acc = 语义正确率 (经 Validator 真值判分); parse_ok = JSON 合法率。")
-    lines.append("> 注意: 以上数字未经预注册假设检验, 引用前对照 preregistration_c2.md 判读规则。")
+    lines.append("> step_acc = Validator.check_step 语义正确率。")
+    lines.append("> parse_ok = 日志 valid 位。它不是单独的 JSON 合法率;")
+    lines.append("> 已提交 logs 上 audit_replay mismatch=0 时, 两列是同一谓词。")
+    lines.append("> 以上数字未经预注册假设检验。")
     text = "\n".join(lines)
     with open(path, "w") as f:
         f.write(text + "\n")
     print(f"已出片段: {path}")
 
-def main():
-    df = load_records()
+def main(argv=None):
+    import os
+    import sys
+    argv = list(sys.argv[1:] if argv is None else argv)
+    logs = argv[0] if len(argv) >= 1 else "etl/results/logs.jsonl"
+    out_dir = argv[1] if len(argv) >= 2 else "etl/results"
+    if not os.path.exists(logs):
+        print(f"找不到 {logs}。已提交批次在 etl/results/archive_*/logs.jsonl。"
+              "不要把工作副本 etl/results/logs.jsonl 当成已入库。", file=sys.stderr)
+        sys.exit(2)
+    if "archive_" in os.path.abspath(logs) and len(argv) < 2:
+        print("拒绝把分析写回 archive_。请另给输出目录。", file=sys.stderr)
+        sys.exit(2)
+    os.makedirs(out_dir, exist_ok=True)
+    df = load_records(logs)
     if df.empty:
-        print("logs.jsonl 为空, 无可分析")
+        print("logs 为空, 无可分析")
         return
-    etl_curve(df)
-    error_decomposition(df)
-    tbl = detach_table(df)
-    report_snippets(tbl)
-    print("Done: fig_etl_curve.pdf, fig_error_decomp.pdf, table_detach.csv, report_snippets.md")
+    etl_curve(df, out=os.path.join(out_dir, "fig_etl_curve.pdf"))
+    error_decomposition(df, out=os.path.join(out_dir, "fig_error_decomp.pdf"))
+    tbl = detach_table(df, path=os.path.join(out_dir, "table_detach.csv"))
+    report_snippets(tbl, path=os.path.join(out_dir, "report_snippets.md"))
+    print(f"Done: {out_dir}/fig_etl_curve.pdf, fig_error_decomp.pdf, table_detach.csv, report_snippets.md")
 
 if __name__ == "__main__":
     main()

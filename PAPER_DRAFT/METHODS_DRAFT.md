@@ -2,6 +2,8 @@
 
 > 状态：初稿（2026-10-09）。本章只写“做了什么、怎么做的”，不写结论；
 > 每个可核查事实带文件行号；凡涉及判断的一律标“设计选择”而非“最优”。
+>
+> 2026-11-09：`c2/results/`、`q5/results/`、`etl/results/logs.jsonl` 不在 git 里。已提交副本见 `report/data/summary.csv`、`etl/results/archive_20261008_hidden_rules/logs.jsonl`、`qc/q5_claims/evidence/`。下面的旧路径保留。
 
 ## 3.1 C.2：CartPole 速度奖励失真实验
 

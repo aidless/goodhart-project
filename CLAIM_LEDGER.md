@@ -1,120 +1,96 @@
-# CLAIM_LEDGER — goodhart-project PAPER_DRAFT（草稿账本）
+# CLAIM_LEDGER
 
-> 位置：`goodhart-project/CLAIM_LEDGER.md`（与 `PAPER_DRAFT/OUTLINE.md` 配对）。
-> 纪律：每条 claim = 陈述 + 预注册出处 + 判定检验 + 证据指针（含文件行号）+ 状态。
-> 状态词只用：`verified` / `inconclusive` / `TODO`。`verified` 仅给已跑通且证据落盘项。
-> 不 git add/commit/push；不编造数字。
+> 每条 claim = 陈述 + 预注册出处 + 判定检验 + 证据指针 + 状态。
+> 状态词只用 `verified` / `inconclusive` / `TODO`。
+> 指针是仓库内相对路径。文件不在 git 里就写 MISSING，不补造。
+> 不把 `docs/HANDOVER.md` 里的绝对路径当成复现步骤。
 
-## V-C2-01 — C.2 脱钩主点（verified）
+## V-C2-01 — C.2 汇总表可重算（verified，范围只到已提交的 summary）
 
-- 陈述：在 α ∈ {0.5,1.0,1.5,2.0,2.5,3.0} 扫描上，真实分于 α=0.5 达峰（444.0，CI [431.9,456.1]）后跌 86.6%–100.5%；α=1.0 档代理全程最大（1.376）而真实崩至 −2.2（CI [−4.5,0.1]），构成 Goodhart 交叉；按预注册三档记「确认脱钩」，并标注第 3 条件字面偏离。
-- 预注册出处：`goodhart-project/prereg/preregistration_c2.md: L33-L37`（H1/H0/H2）；`L63-L68`（三档 + detach 定义）；`L72-L76`（强制附带）。
-- 判定检验：峰后跌幅 ≥15% + 95% bootstrap CI 不含 0（配对差按 seed；功效补记 SD 15–16 < 44.6 上限，实际功效 ≈1.0）。
+- 陈述：`report/data/summary.csv` 有 30 行数据（6 档 α × 5 seeds）。sha256 与 `c2_run.log` 记录的摘要哈希相同。用 `src/analyze_c2.py` 重算，α=0.5 的 true 均值 444.0216（CI 431.894,456.149），α=1.0 的 true 均值 −2.2205、proxy 均值 1.3762。α=1.0 的 detach 1.005，α=2.0 的 detach 0.8661。这是已提交汇总的重算，不是一次新的训练。
+- 预注册：`prereg/preregistration_c2.md` 的 H1/H0/H2、三档判读、强制附带。第 3 条「proxy 达峰后继续上升或持平」在这批汇总上字面不满足（proxy 在 α=1.0 最大，其后回落）。2026-10-08 的裁定记在 `docs/HANDOVER.md` §13.11，本账本不升级那次裁定。
+- 判定检验：`python3 src/drift_check.py` 对照 README 的 numbers 块、本文件、以及 `report/data/table1_true_score.csv`。
 - 证据指针：
-  - `goodhart-project/c2/results/summary.csv: L1-L31`（31 行 = 表头 + 30 行；L2-L6 α=0.5 全 500 步存活；L7-L11 α=1.0 塌陷）；sha256 `58b64fc881822af7a8ffb5033146c7a7e94505cf91e58c2322bad7b662192c31`（见 `c2_run.log: L36` / `preregistration_c2.md: L96-L97`）
-  - `goodhart-project/c2/results/table1_true_score.csv: L2-L7`（六档 mean/CI/proxy/detach；峰 444.0216，谷 −2.2205）
-  - `goodhart-project/c2/results/train_config.json: L2-L24`（α/seeds/100k/λ/limit/prereg_synced=true）
-  - `goodhart-project/c2_run.log: L5-L35`（30/30 完成）、`L39`（prereg_synced=True 可判读）
-  - `goodhart-project/docs/HANDOVER.md` §13.11（行号 2026-10-12 实测）：三条件核对 + 裁定 (a) L629-L652 与 L654 起、定稿措辞 L654-L672、附带条件 L673-L678
-- 状态：**verified**（可入 §2 结果 + §2.4 定稿措辞；引用措辞必须连带第 3 条件偏离标注一起抄）
+  - `report/data/summary.csv`（30 行数据 + 表头；sha256 `58b64fc881822af7a8ffb5033146c7a7e94505cf91e58c2322bad7b662192c31`）
+  - `report/data/table1_true_score.csv`
+  - `c2_run.log`（30 行 `[run]`，并记录同一 sha256；`prereg_synced=True` 只出现在这行日志里）
+  - `c2/results/summary.csv` — MISSING。`c2/results/` 被 gitignore。离线路径会把重算表写到该目录，不把 summary 从训练集再造出来。
+  - `c2/results/train_config.json` — MISSING。没有提交的配置文件，不能从日志反写一份。
+- 状态：**verified**（仅限已提交 summary 的均值、CI、detach 与日志哈希一致）。训练权重、逐步曲线不在仓库里，不能从本仓库重跑判分。
 
-## V-ETL-01 — ETL 可复现性（verified：判分可重放；性能数字仅作方法学报告，且列名为误导性命名）
+## V-ETL-01 — 批次 1 判分可重放（verified）
 
-- 陈述：ETL 判分管线可复现（audit 重放 mismatch=0）；性能层面只登记「llama3.1:8b 三族**语义正确率极低**（chain-sort 0/197、ret-path 0/204、stateful-calc 5/213 = 0.0235；整任务全对 0/90）、`first_err_median=0.0` 地板效应」，不升任何能力 claim。
-  - ✅ **2026-10-08 已修复口径缺陷**：原 `step_acc` 误用 `valid`（JSON 合法率）；现 `src/analyze_etl.py` 用 `Validator.check_step()` 真值判分，区分 `correct`（语义）与 `parse_ok`（合法）。正文引用一律写「语义正确率 5/213」。
-- 预注册出处：无（B/ETL 未预注册；`docs/internal_report_skeleton.md: L34` 明确 [exploratory]；`etl/results/report_snippets.md: L11-L13` 警告未经预注册）。
-- 判定检验：`src/audit_replay.py` 重放全部 614 步，mismatch 必须为 0（fail-closed）。
+- 陈述：`etl/results/archive_20261008_hidden_rules/logs.jsonl` 为 90 个任务、614 步，模型名 llama3.1:8b。`src/audit_replay.py` 重放 mismatch=0。语义正确（日志字段 `valid`，与 `Validator.check_step` 一致）为 5/614：chain-sort 0/197、ret-path 0/204、stateful-calc 5/213。整任务全对 0/90。这不是能力结论。B 线没有预注册。
+- 更正（原文保留在 `docs/HANDOVER.md` §13.13）：该节写过「correct 0/614」。日志里没有 `ok` 字段。对缺失键计数会得到 0。语义正确率是 5/614。`paper/main.tex` 写的是 5/614。
+- 预注册出处：无。`docs/internal_report_skeleton.md` 把 B 线标为 exploratory。
+- 判定检验：`python3 src/audit_replay.py etl/results/archive_20261008_hidden_rules/logs.jsonl` 必须打印 mismatch=0 并以 0 退出。
 - 证据指针：
-  - `goodhart-project/etl/results/logs.jsonl`：`wc -l` = 90 行 = 90 任务（stateful-calc/chain-sort/ret-path 各 30），内含 614 步（实算：`python3 -c` 逐行 `len(steps)` 求和 = 614；`model` 全 `llama3.1:8b`），抽查行段 `L1-L30` / `L31-L60` / `L61-L90` 按族排列
-  - 实跑：`python3 src/audit_replay.py`（goodhart-project 根）→ `审计完成: 614 步, mismatch=0 / PASS — 判分可复现`，exit 0（2026-10-08 实测复核通过）
-  - `etl/results/table_detach.csv: L1-L4`（表头 + 三行；`step_acc` = 语义正确率 0.0 / 0.0 / 0.0235，`parse_ok` = 合法率同值）
-  - **正确率实算（2026-10-08 本次重算）**：`valid` 分族 5/213（stateful-calc）、0/197（chain-sort）、0/204（ret-path），合计 5/614 = 0.8%；**正确步 0/614 = 0.0%；整任务全对 0/90**。与 `docs/HANDOVER.md` §13.13 L766 一致
-  - 地板效应边界：`first_err_median = 0.0`（三族全 0）→ 无「带病状态上继续推理」样本，误差分解本批无作用面；`docs/HANDOVER.md` §13.13 L768-L775（防两误读）、L776-L780（Q2/Q4 当前不可分析，出路 = 换更强模型重跑）
-  - `goodhart-project/etl/results/report_snippets.md: L5-L9`（自动表）、`L11-L13`（exploratory 声明）
-  - `goodhart-project/etl/results/fig_etl_curve.pdf` + `fig_error_decomp.pdf`（存在性引用）
-- 状态：**verified**（仅「管线可复现」可入正文方法/结果；性能数字只作描述性报告 + [exploratory]，禁作显著性/机制结论）
+  - `etl/results/archive_20261008_hidden_rules/logs.jsonl`
+  - `etl/results/archive_20261008_hidden_rules/table_detach.csv`
+  - `etl/results/archive_20261008_hidden_rules/report_snippets.md`（脚注把 parse_ok 写成 JSON 合法率；见 F-ETL-COLUMN。表内数字不改。）
+  - `etl/results/archive_20261008_hidden_rules/fig_etl_curve.pdf`
+  - `etl/results/archive_20261008_hidden_rules/fig_error_decomp.pdf`
+  - `etl/results/logs.jsonl` — MISSING。这是可被重跑覆盖的工作副本，不入库。
+- 状态：**verified**（判分可重放，以及 5/614 这一计数）。不把 5/614 写成模型能力。
 
-## I-Q5-H1 — 惩罚可见性主假设（inconclusive：null，无作用面）
+## V-ETL-02 — 批次 2 规则公开重跑（exploratory）
 
-- 陈述：salient vs blind 的 true_score 配对差 mean −0.00035（SD 0.00451），CI 与 0 不可区分；两组 steps_alive 全 500、mean_speed ≈0.107/0.108（限速 28%），罚分合计 0.007/0.008——操纵无作用面，属预注册归因 (a)。
-- 预注册出处：`goodhart-project/prereg/preregistration_q5.md: L22-L30`（H1/H2/H0）；`L48-L57`（判读 + 否证只许 (a)/(b)）。
-- 判定检验：按 seed 配对差 95% bootstrap CI（2000 次）是否含 0。
-- 证据指针：`goodhart-project/q5/results/summary_q5.csv: L1-L11`（表头 + 10 行；L2-L6 blind / L7-L11 salient）；`q5/results/train_config_q5.json: L1-L18`；`preregistration_q5.md: L67-L76`（补记）；`docs/HANDOVER.md` §13.12（L686-L715，登记）。
-- 状态：**inconclusive**（null 结果；入 §4 时只写「本批无差异、归因 (a)」，禁写「可察觉性不重要」一般结论）
+- 陈述：`etl/results/archive_20261012_public_rules/logs.jsonl` 为 qwen2.5:3b，90 任务、614 步。语义正确 chain-sort 23/197、ret-path 39/204、stateful-calc 25/213，合计 87/614。整任务全对 1/90。audit mismatch=0。未预注册，只作描述。
+- 对照：批次 1 与批次 2 的模型和 prompt 都不同。不能把两批的差写成「模型变强了」。
+- 证据指针：
+  - `etl/results/archive_20261012_public_rules/logs.jsonl`
+  - `etl/results/archive_20261012_public_rules/table_detach.csv`
+  - `etl/results/archive_20261012_public_rules/report_snippets.md`
+  - `qc/q2_q4_analysis/results.json`（探索性分解；不是预注册检验）
+- 状态：账本状态词里没有「exploratory」。这里保持 **TODO** 作为「未预注册、不可升级为机制结论」，数字本身由 drift check 对照 logs。
 
-## I-Q5-H2 — 惩罚可见性次假设（inconclusive：形式满足、实质不成立）
+## I-Q5-H1 — 惩罚可见性主假设（inconclusive）
 
-- 陈述：|mean_speed − limit| 配对差 −0.0013（CI [−0.0016,−0.0009] 不含 0）形式上满足冻结判据，但效应量仅为共同偏差（≈0.269）的 0.5%，两组同为过度保守而非「压线 vs 冲速」。
-- 出处/检验同 I-Q5-H1（`preregistration_q5.md: L25-L27` H2；`L50` 检验）。
-- 证据指针：同上 + `docs/HANDOVER.md` §13.12（L706-L715，双记原文）。
-- 状态：**inconclusive**（如实双记；禁作行为学意义断言）
+- 陈述：已提交的 `qc/q5_claims/evidence/q5_true_paired.csv` 上，salient−blind 的 true_score 配对差均值是 -0.000352。`qc/q5_claims/claims.json` 的 CI 含 0。不外推成「可察觉性不重要」。
+- 预注册：`prereg/preregistration_q5.md`。
+- 证据指针：
+  - `qc/q5_claims/evidence/q5_true_paired.csv`
+  - `qc/q5_claims/claims.json`
+  - `q5_run.log`（10 行 `[run]` 与 exit 0。日志没有逐 seed 的分数。）
+  - `q5/results/summary_q5.csv` — MISSING。
+  - `docs/HANDOVER.md` §13.12 记录过一个 sha256。仓库里没有这份原始表，不能在这里复核那个哈希。
+  - `q5/results/train_config_q5.json` — MISSING。
+- `steps_alive` 与罚分合计出现在 §13.12 的表里，不在已提交的配对 CSV 里。这两项从 git 树 **UNKNOWN**，引用时不要写成已复核。
+- 状态：**inconclusive**
 
-## I-B-MECH — 链式误差分解机制（TODO / exploratory；本批因地板效应**无作用面**）
+## I-Q5-H2 — 惩罚可见性次假设（inconclusive）
 
-- 陈述（候选，禁作结论）：cumulative 错误占比随 k 上升 → 带病推理；被压平 → 疑似作弊恢复（记忆真值跳过带病状态）。
-- 出处：无预注册（skeleton §3.4 明确 [exploratory]）。
-- 检验：未锁定（需先定义 single/cumulative 操作 + 预注册假设检验）。
-- ⚠️ **前置阻断（本批不可分析，2026-10-08 补记）**：`first_err_median = 0.0`（三族全 0）→ 模型在第 0 步即错，**不存在「带病状态上继续推理」的样本**；correct 0/614。故 single/cumulative 分解在本批**无作用面**，`fig_error_decomp.pdf` 是地板的形状而非机制形状。解锁需换更强模型重跑（属重跑测量、非新设计）。
-- 证据指针：`goodhart-project/etl/results/fig_error_decomp.pdf`（存在性）；`docs/internal_report_skeleton.md: L34-L37`；`docs/HANDOVER.md` §13.13 L768-L775（防两误读）、L776-L780（Q2/Q4 当前不可分析）；`docs/agi_question_list.md: L9-L10`（Q2/Q4 🟡 地板效应）。
-- 状态：**TODO**（本稿 §3.4 只给描述性图 + [exploratory] 段首标 + 地板效应警告，不写因果句）
+- 陈述：`qc/q5_claims/evidence/q5_speeddev_paired.csv` 上，|mean_speed−limit| 的 salient−blind 配对差均值是 -0.001264。`qc/q5_claims/claims.json` 记 CI 不含 0。效应相对两组共同偏差很小，而且文件里没有带符号的 mean_speed 列，不能从这张表单独还原「0.107 / 0.108」的速度。那两个速度值 **UNKNOWN**（只在 §13.12 的叙述里）。
+- 证据指针：同 I-Q5-H1 的已提交配对表与 `qc/q5_claims/claims.json`。
+- 状态：**inconclusive**
 
-## I-C2-H2 — α* 稳定性次假设（TODO：删失退化，不作正面证据）
+## I-B-MECH — 链式误差分解（TODO）
 
-- 陈述：每个 seed 的 true 峰全在 α=0.5（网格最左端），α* 左删失，方差 0 属退化，不能作为 H2 正面证据。
-- 出处：`preregistration_c2.md: L37`（H2）；判读见 `docs/HANDOVER.md` §13.11 L684。
-- 证据指针：`c2/results/summary.csv: L2-L31`（逐 seed 峰位可重算；本账本不另算，只引退化定性）。
-- 状态：**TODO**（正文不写 H2 确认；方法 §2.5 可记一笔删失局限）
+- 陈述：cumulative / single 分解没有预注册检验。批次 1 的 first_err 中位数是 0，但不是每个任务都在第 0 步出错（stateful-calc 有正确步）。不能把「中位数为 0」写成「没有任何一步算对」。
+- 证据指针：`etl/results/archive_20261008_hidden_rules/fig_error_decomp.pdf`，`docs/internal_report_skeleton.md`。
+- 状态：**TODO**
+
+## I-C2-H2 — α* 稳定性（TODO）
+
+- 陈述：30 行 summary 里每个 seed 的 true 峰都在 α=0.5，也就是网格左端。方差 0 是删失，不是 H2 的正面证据。
+- 证据指针：`report/data/summary.csv`。
+- 状态：**TODO**
 
 ## I-VENUE — 投稿口径（TODO）
 
-- 陈述：首轮走 control/RL 安全 workshop 打磨，正刊待 Q2/Q4 长链外推 + 多 seed 功效补强。
-- 证据：无（决策项，非数据 claim）。
-- 状态：**TODO**（OUTLINE 已给一句建议；待作者拍板）
-
-## F-ETL-COLUMN — `step_acc` 列名误导（TODO：待改脚本或论文侧改写，本轮只登记）
-
-- 陈述（非科学 claim，是**报告纪律缺陷**）：`etl/results/table_detach.csv` 与 `report_snippets.md` 的 `step_acc` 列名与实际统计量（`valid` 合法率）不符，存在被下游误读为「模型答对率」的风险。
-- 证据：`goodhart-project/src/analyze_etl.py: L40`、`L94`、`L102`、`L114`、`L117`（命名链）；落盘表 `etl/results/table_detach.csv: L1-L4`；独立重算 valid 5/614 vs correct 0/614（本账本「复算命令」节末条）。
-- 判定：正文侧已按 V-ETL-01 口径警告改写；**脚本侧是否改名/补列（valid 与 correct 并列）待作者决定**——本轮未改 `src/`，避免动到其他线共用的分析脚本。
+- 陈述：投到哪里是决定，不是数据。
 - 状态：**TODO**
 
-## 复算命令（本账本数字的重算入口，不手抄）
+## F-ETL-COLUMN — `parse_ok` 列名（TODO）
+
+- 陈述：归档表 `etl/results/archive_20261008_hidden_rules/table_detach.csv` 的 `step_acc` 与日志 `valid` 一致，在 mismatch=0 时也就是语义正确率。`parse_ok` 列拷贝同一个 `valid` 位。归档脚注把它写成 JSON 合法率，这个区分在已提交 logs 上并不存在。列没有改名，避免改写归档。
+- 证据指针：`src/analyze_etl.py`，`etl/results/archive_20261008_hidden_rules/report_snippets.md`。
+- 状态：**TODO**
+
+## 复算
 
 ```bash
-# C.2 行数 + sha（期望 31 行 / 58b64fc8…192c31）
-wc -l goodhart-project/c2/results/summary.csv && sha256sum goodhart-project/c2/results/summary.csv
-# C.2 分档均值重算（应与 table1_true_score.csv L2-L7 一致）
-python3 -c "import csv; rows=list(csv.DictReader(open('goodhart-project/c2/results/summary.csv'))); ..."
-# ETL 任务/步数/模型（期望 90 / 614 / llama3.1:8b）
-python3 -c "import json; ..."
-# ETL 审计（期望 614 步 mismatch=0, exit 0）
-python3 src/audit_replay.py
-# 【2026-10-08 新增】ETL 正确率 vs valid 率实算（期望 correct 0/614、valid 5/614、分族 5/213·0/197·0/204）
-python3 -c "
-import json
-from collections import defaultdict
-f=defaultdict(lambda:{'steps':0,'valid':0,'ok':0})
-for l in open('goodhart-project/etl/results/logs.jsonl'):
-    r=json.loads(l)
-    for st in r['steps']:
-        d=f[r['family']]; d['steps']+=1; d['valid']+=bool(st.get('valid')); d['ok']+=bool(st.get('ok'))
-print({k:dict(v) for k,v in f.items()})"
+python3 src/drift_check.py
+python3 src/audit_replay.py etl/results/archive_20261008_hidden_rules/logs.jsonl
+python3 src/analyze_c2.py report/data/summary.csv c2/results
 ```
-
-> 上述最后一条是「`step_acc` 实为 `valid` 率」这一发现的复算入口：脚本 `analyze_etl.py`
-> 取 `valid` 却命名为 `step_acc`，只跑 `report_snippets.md` 会误读成准确率。
-> 交叉验证：`docs/HANDOVER.md` §13.13 L766（valid 5/614 = 0.8%、correct 0/614，2026-10-08 历史口径）。
-
-## V-ETL-02 — 批次 2（规则公开重跑）: 地板解除 + 误差分解获得作用面（exploratory）
-
-- 陈述：批次 2（qwen2.5:3b，90 任务 / 614 步，逐步规则进公开 prompt、truth_chain 仍仅 validator 可见，schedules 文件哈希跨批不变）语义正确率 chain-sort 0.1168 / ret-path 0.1912 / stateful-calc 0.1174（first_err_median 0.0/0.0/1.0）；audit 重放 614 步 mismatch=0。**全部为点估计，误差分解与恢复率梯度整节标 [exploratory]**（未预注册）。
-  - 地板解除的对照声明：批次 1（llama3.1:8b 隐藏规则）地板 5/614 的根因是任务按构造不可解（KI-002 设计属性），批次 2 证明「规则公开后通道有效」，不证明「模型能力提升」——两批模型与 prompt 双双不同，属设计修复验证，非受控比较。
-  - 误差分解读数：cumulative 主导 82%/76%/69%（154/188、133/174、114/165）；错后恢复 46/614；恢复率梯度 ret-path 16.4% > chain-sort 8.6% > stateful 2.1%，与重锚定假说**相容**（相容性证据非因果，因果降级需 mini_experiment 式双臂）。
-- 预注册出处：无（B/ETL 未预注册；`docs/internal_report_skeleton.md` [exploratory] 纪律）。
-- 判定检验：`python3 src/audit_replay.py`（对批次 2 logs）mismatch=0；恢复率梯度可用 `qc/q2_q4_analysis/analyze.py` 重算。
-- 证据指针：
-  - `etl/results/archive_20261012_public_rules/logs.jsonl`（90 行 = 批次 2 原始 logs；工作区 `etl/results/logs.jsonl` 正被 chain-sort 7B 复测占用，恢复计划见 HANDOVER §13.19）
-  - `etl/results/archive_20261012_public_rules/table_detach.csv`（0.1168/0.1912/0.1174 + first_err_median，正文 tab:etl-v2 逐字来源）
-  - `qc/q2_q4_analysis/results.json`（cumulative 占比、恢复 46/614、梯度 16.4/8.6/2.1%；Q4 逐 k 样本 4–30 不可判）
-  - `paper/main.tex` §Results (tab:etl-v2) 与 §etl-decomp；`research_numbers` 对账 PASS（2026-10-12，252 纸面数字 vs 113 数据侧，0 diff）
-- 登记：2026-10-12（批次 2 完成当晚；KI-002 → f3a32cc 规则公开 → 02ae957 门禁 v3.1 → d77237d 批次 2 落盘的全链终点）。

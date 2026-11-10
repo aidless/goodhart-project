@@ -8,6 +8,24 @@
 
 **怎么跑**：`python3 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt && bash run_all.sh`（只覆盖 B 管线；C.2 训练需另跑 `src/train_c2.py`）。
 
+## 结果图
+
+**图 1 — C.2 脱钩曲线**（`analyze_c2.py` 对已提交的 `report/data/summary.csv` 30 行数据重算：
+6 档 α × 5 seeds，95% bootstrap CI，聚合均值与已提交的 `report/data/table1_true_score.csv` 逐值一致）：
+
+![图1 C.2 脱钩曲线：proxy_score 与 true_score 随 alpha（95% CI）](report/figures/fig1_detach_curve.png)
+
+**图 2 / 图 3 — B 管线归档结果**（由 `etl/results/archive_20261012_public_rules/` 内已提交的
+`fig_etl_curve.pdf` 与 `fig_error_decomp.pdf` 以 `pdftoppm -r 150` 转出，数字对应 qwen2.5:3b
+三族 step_acc 0.1168 / 0.1912 / 0.1174，见同目录 `report_snippets.md`）：
+
+![图2 ETL 曲线：correct 与 parse_ok 按族](report/figures/fig2_etl_curve.png)
+
+![图3 误差分解：cumulative vs single share by k](report/figures/fig3_error_decomp.png)
+
+更早的 `archive_20261008_hidden_rules/`（llama3.1:8b）呈地板效应（三族 step_acc 0.0 / 0.0 / 0.0235），
+同目录亦存归档图。以上 B 管线数字未经预注册假设检验，引用前对照 `prereg/preregistration_c2.md` 判读规则。
+
 ## 目录结构
 
 ```

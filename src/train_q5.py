@@ -8,8 +8,8 @@
   主量: true_score (同 seed 配对比较 salient − blind)。
 
 用法 (从仓库根):
-  /home/liuzewen/.venvs/goodhart/bin/python src/train_q5.py --smoke   # 冒烟: 产物落 /tmp
-  /home/liuzewen/.venvs/goodhart/bin/python src/train_q5.py           # 全量 (须预注册锁定后)
+  python3 src/train_q5.py --smoke   # 冒烟: 产物落 /tmp（需 goodhart venv，见 docs/HANDOVER.md）
+  python3 src/train_q5.py           # 全量 (须预注册锁定后)
 """
 import argparse
 import csv

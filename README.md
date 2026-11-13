@@ -1,5 +1,9 @@
 # Goodhart 脱钩与链式任务测量
 
+[![CI](https://github.com/aidless/goodhart-project/actions/workflows/checks.yml/badge.svg)](https://github.com/aidless/goodhart-project/actions/workflows/checks.yml)
+
+两个实验的工程骨架：**C.2**（Goodhart 脱钩，CartPole + PPO，真实目标 vs 代理目标）与 **B**（链式任务 ETL 与误差分解）。
+
 > **这个项目解决什么问题**：把「代理目标与真实目标脱钩」与「链式任务中错误如何累积」
 > 从口头论点变成**可测量、可复算、可审计**的证据。前者用 CartPole + PPO 做控制实验
 > （真实目标 vs 代理目标，预注册判据），后者用 90 个链式任务 + 614 步真实 LLM 调用
@@ -22,6 +26,27 @@
 **边界（先说结论，细则见文末「证明什么 / 不证明什么」）**：C.2 是**单环境单算法**的控制实验，
 不证明 Goodhart 定律普遍成立；B 是**单模型单跑（n=90）**，全部点估计标 [exploratory]，
 不构成模型能力因果结论。
+**验证过什么**：C.2 已按预注册跑满 30/30（6 档 α × 5 seeds × 100k 步），真实分在 α=0.5 达峰 444.0（CI [431.9,456.1]）后跌 86.6%–100.5%，α=1.0 档代理最大 (1.376) 而真实崩至 −2.2，判定「确认脱钩」。ETL 判分重放 614 步 mismatch=0。每条 claim 的证据指针与状态见 `CLAIM_LEDGER.md`。
+
+**怎么跑**：`python3 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt && bash run_all.sh`（只覆盖 B 管线；C.2 训练需另跑 `src/train_c2.py`）。
+
+## 结果图
+
+**图 1 — C.2 脱钩曲线**（`analyze_c2.py` 对已提交的 `report/data/summary.csv` 30 行数据重算：
+6 档 α × 5 seeds，95% bootstrap CI，聚合均值与已提交的 `report/data/table1_true_score.csv` 逐值一致）：
+
+![图1 C.2 脱钩曲线：proxy_score 与 true_score 随 alpha（95% CI）](report/figures/fig1_detach_curve.png)
+
+**图 2 / 图 3 — B 管线归档结果**（由 `etl/results/archive_20261012_public_rules/` 内已提交的
+`fig_etl_curve.pdf` 与 `fig_error_decomp.pdf` 以 `pdftoppm -r 150` 转出，数字对应 qwen2.5:3b
+三族 step_acc 0.1168 / 0.1912 / 0.1174，见同目录 `report_snippets.md`）：
+
+![图2 ETL 曲线：correct 与 parse_ok 按族](report/figures/fig2_etl_curve.png)
+
+![图3 误差分解：cumulative vs single share by k](report/figures/fig3_error_decomp.png)
+
+更早的 `archive_20261008_hidden_rules/`（llama3.1:8b）呈地板效应（三族 step_acc 0.0 / 0.0 / 0.0235），
+同目录亦存归档图。以上 B 管线数字未经预注册假设检验，引用前对照 `prereg/preregistration_c2.md` 判读规则。
 
 ## 目录结构
 
@@ -82,16 +107,15 @@ goodhart-project/
 ## 快速开始
 
 ```bash
-# 本机 Debian 系 Python 3.12 启用了 PEP 668 (externally-managed-environment),
-# 直连 pip install 会被系统策略拒绝 (exit 1)。走 venv。
-#
-# 注意: venv 不能建在仓库内 —— 本仓库目录名含路径分隔符 ':'
-# (F:\deepseek), Python 3.11+ 会拒绝: "contains the PATH separator :"。
-# 故建在无冒号路径, 并用 --system-site-packages 复用系统的 CUDA torch。
-python3 -m venv --system-site-packages /home/liuzewen/.venvs/goodhart
-/home/liuzewen/.venvs/goodhart/bin/python -m pip install -r requirements.txt
+# Debian 系 Python 3.12 默认启用 PEP 668 (externally-managed-environment),
+# 直连 pip install 会被系统策略拒绝 (exit 1)。走 venv:
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
 # 跑训练/脚本时用该 venv 的解释器:
-#   /home/liuzewen/.venvs/goodhart/bin/python src/train_c2.py
+#   .venv/bin/python src/train_c2.py
+#
+# 如需复用系统 site-packages (例如已装好的 CUDA 版 torch), 建议加
+# --system-site-packages 并把 venv 建在仓库外。
 
 # 解释器默认 python3; 若你的环境只有 python, 用:
 #   PYTHON=python bash run_all.sh

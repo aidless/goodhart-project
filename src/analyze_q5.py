@@ -10,7 +10,7 @@ fail-closed: 配对数 < 5 (预注册样本) → 拒绝判读, exit 1。
 跑后义务 (§4): 打印配对差 SD 与 dz, 提醒向预注册 §4 追加实测功效 (只准追加)。
 
 用法 (从仓库根):
-  /home/liuzewen/.venvs/goodhart/bin/python src/analyze_q5.py
+  python3 src/analyze_q5.py   # 需 goodhart venv（见 docs/HANDOVER.md）
 """
 import argparse
 import csv

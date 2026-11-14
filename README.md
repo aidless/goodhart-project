@@ -205,3 +205,7 @@ $V src/leak_check.py --selftest
 
 **证据链纪律**：`logs.jsonl` 的 `raw` 字段是逐字原文（禁止转述）；`schedules.pkl` 不入库
 （真值只存 SHA256 锚点），杜绝 git 通道泄漏。重算不一致 = 该数字不可信，按 AGENTS.md 铁律 1 阻塞。
+
+## 本机可重跑性
+
+`make eval` 跑离线套件 `python3 -m pytest tests -q`（8 passed，约 38 s）；`run_all.sh` 第 2 步泄漏门禁要调本地 ollama（`127.0.0.1:11434`, `llama3.1:8b`），服务缺席即 `GATE: FAIL` fail-closed，故原命令保留为 `make ci-eval`。
